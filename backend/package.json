@@ -1,0 +1,28 @@
+{
+  "name": "app_doandbefitness",
+  "version": "1.0.0",
+  "description": "This app serves as platform for tracking progress of my clients, setting up their training plan and keeping up their profile.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blagusd/app_doandbefitness.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blagusd/app_doandbefitness/issues"
+  },
+  "homepage": "https://github.com/blagusd/app_doandbefitness#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0"
+  }
+}
