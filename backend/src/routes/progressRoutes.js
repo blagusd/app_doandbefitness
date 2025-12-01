@@ -1,9 +1,15 @@
 const express = require("express");
-const { authMiddleware, _ } = require("../middleware/authMiddleware");
 const router = express.Router();
+const {
+  addProgress,
+  getProgress,
+} = require("../controllers/progressController");
+const {
+  authenticateJWT,
+  authorizeRoles,
+} = require("../middleware/authMiddleware");
 
-router.post("/progress", authMiddleware, (req, res) => {
-  res.json({ message: "🤸 Progress successfully added", userId: req.user.id });
-});
+router.post("/", authenticateJWT, authorizeRoles("client"), addProgress);
+router.get("/", authenticateJWT, authorizeRoles("client"), getProgress);
 
 module.exports = router;

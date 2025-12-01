@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 const progressRoutes = require("./routes/progressRoutes");
-const workoutRoutes = require("./routes/workoutRoutes");
+const exerciseRoutes = require("./routes/exerciseRoutes");
+const planRoutes = require("./routes/planRoutes");
 
 const app = express();
 app.use(express.json());
@@ -15,7 +16,8 @@ mongoose
   .catch((err) => console.error(err));
 
 app.use("/auth", authRoutes);
-app.use("/api", progressRoutes);
-app.use("/api", workoutRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/exercises", exerciseRoutes);
+app.use("/api/plans", planRoutes);
 
 app.listen(5000, () => console.log("Server running on port 5000"));
