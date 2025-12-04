@@ -4,6 +4,7 @@ const authRoutes = require("./routes/authRoutes");
 const progressRoutes = require("./routes/progressRoutes");
 const exerciseRoutes = require("./routes/exerciseRoutes");
 const planRoutes = require("./routes/planRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 app.use(express.json());
@@ -19,5 +20,7 @@ app.use("/auth", authRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/exercises", exerciseRoutes);
 app.use("/api/plans", planRoutes);
+
+app.use(errorHandler);
 
 app.listen(5000, () => console.log("Server running on port 5000"));

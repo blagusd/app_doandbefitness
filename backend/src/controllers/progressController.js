@@ -1,3 +1,4 @@
+const AppError = require("../utils/AppError");
 const User = require("../models/User");
 
 exports.addProgress = async (req, res) => {
@@ -18,14 +19,16 @@ exports.addProgress = async (req, res) => {
       { new: true }
     ).populate("progressEntries.exerciseId");
 
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
     res.status(201).json({
       message: "🎉 Progress successfully added",
       progress: user.progressEntries,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "🚨 Error by adding progress", error: err.message });
+    next(err);
   }
 };
 
@@ -38,8 +41,6 @@ exports.getProgress = async (req, res) => {
 
     res.status(200).json(user.progressEntries);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "🚨 Cannot catch the progress", error: err.message });
+    next(err);
   }
 };

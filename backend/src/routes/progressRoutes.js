@@ -1,4 +1,5 @@
 const express = require("express");
+const { validateProgressEntry } = require("../middleware/validationMiddleware");
 const router = express.Router();
 const {
   addProgress,
@@ -9,7 +10,13 @@ const {
   authorizeRoles,
 } = require("../middleware/authMiddleware");
 
-router.post("/", authenticateJWT, authorizeRoles("client"), addProgress);
+router.post(
+  "/",
+  authenticateJWT,
+  authorizeRoles("client"),
+  validateProgressEntry,
+  addProgress
+);
 router.get("/", authenticateJWT, authorizeRoles("client"), getProgress);
 
 module.exports = router;

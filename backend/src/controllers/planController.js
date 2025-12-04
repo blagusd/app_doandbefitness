@@ -1,3 +1,4 @@
+const AppError = require("../utils/AppError");
 const Plan = require("../models/Plan");
 const User = require("../models/User");
 
@@ -14,9 +15,7 @@ exports.createPlan = async (req, res) => {
 
     res.status(201).json(plan);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "🗒️ Error by creating a plan", error: err.message });
+    next(err);
   }
 };
 
@@ -26,10 +25,11 @@ exports.getUserPlans = async (req, res) => {
     const plans = await Plan.find({ assignedTo: userId }).populate(
       "workouts.exercises"
     );
+    if (!plans || plans.length === 0) {
+      return next(new AppError("📩 Cannot get the plans", 404));
+    }
     res.status(200).json(plans);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "📩 Cannot get the plans", error: err.message });
+    next(err);
   }
 };
