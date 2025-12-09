@@ -3,8 +3,8 @@ const Exercise = require("../models/Exercise");
 
 exports.createExercise = async (req, res) => {
   try {
-    const { name, youtubeLink, muscleGroup } = req.body;
-    const exercise = new Exercise({ name, youtubeLink, muscleGroup });
+    const { name, youtubeLink, muscleGroup, notes } = req.body;
+    const exercise = new Exercise({ name, youtubeLink, muscleGroup, notes });
     await exercise.save();
     res.status(201).json(exercise);
   } catch (err) {

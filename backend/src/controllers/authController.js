@@ -1,9 +1,11 @@
 const AppError = require("../utils/AppError");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
+const { sendEmail } = require("../config/email");
 
 const register = async (req, res) => {
   try {
@@ -44,4 +46,53 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return next(new AppError("👽 User not found", 404));
+
+    // generate token
+    const token = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 1000 * 60 * 15; // 15 min
+    await user.save();
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    await sendEmail(
+      user.email,
+      "Password reset - Do&BEFitness",
+      `<p>Click link for password reset:</p><a href="${resetLink}">${resetLink}</a>`
+    );
+
+    res.status(200).json({ message: `Reset link sent to ${email}` });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) return next(new AppError("❕ Invalid or expired token", 400));
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "🛂 Password successfully reset" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, login, forgotPassword, resetPassword };
