@@ -2,8 +2,9 @@
   "name": "app_doandbefitness",
   "version": "1.0.0",
   "description": "This app serves as platform for tracking progress of my clients, setting up their training plan and keeping up their profile.",
-  "main": "index.js",
+  "main": "./src/app.js",
   "scripts": {
+    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,8 +30,10 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0",
     "nodemailer": "^7.0.11",
+    "nodemon": "^3.1.11",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "window": "^1.0.0",
     "xss-clean": "^0.1.4"
   }
 }

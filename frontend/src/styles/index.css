@@ -1,0 +1,14 @@
+:root {
+  --color-primary: #396ea9; /* main color */
+  --color-primary-dark: #2f5a8a; /* darker for hover */
+  --color-contrast: coral; /* contrast color */
+  --color-bg: #ffffff; /* white background */
+  --color-text: #333333; /* main text */
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}

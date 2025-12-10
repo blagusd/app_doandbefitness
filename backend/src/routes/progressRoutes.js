@@ -5,10 +5,7 @@ const {
   addProgress,
   getProgress,
 } = require("../controllers/progressController");
-const {
-  authenticateJWT,
-  authorizeRoles,
-} = require("../middleware/authMiddleware");
+const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
 /**
  * @swagger
@@ -60,8 +57,8 @@ const {
  */
 router.post(
   "/",
-  authenticateJWT,
-  authorizeRoles("client"),
+  authMiddleware,
+  requireRole("client"),
   validateProgressEntry,
   addProgress
 );
@@ -105,6 +102,6 @@ router.post(
  *       403:
  *         description: Only client can add progress
  */
-router.get("/", authenticateJWT, authorizeRoles("client"), getProgress);
+router.get("/", authMiddleware, requireRole("client"), getProgress);
 
 module.exports = router;

@@ -1,0 +1,46 @@
+.app-container {
+  font-family: system-ui, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--color-primary);
+  color: #fff;
+  position: relative;
+}
+
+.logo-centered {
+  height: 100px;
+}
+
+/* Log In button right */
+.login-btn {
+  position: absolute;
+  right: 2rem;
+  background-color: var(--color-contrast);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #fff;
+}
+
+.login-btn:hover {
+  background-color: #ff7f50; /* darker coral */
+}
+
+/* Landing page */
+.landing {
+  padding: 2rem;
+  text-align: center;
+}
+
+.landing h2 {
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}

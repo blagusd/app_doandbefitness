@@ -26,11 +26,12 @@ exports.validateUserLogin = (req, res, next) => {
 };
 
 // exercise validation
-exports.validateExercie = (req, res, next) => {
+exports.validateExercise = (req, res, next) => {
   const schema = Joi.object({
     name: Joi.string().min(2).required(),
     youtubeLink: Joi.string().uri().required(),
     muscleGroup: Joi.string().optional(),
+    notes: Joi.string().optional(),
   });
   const { error } = schema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });

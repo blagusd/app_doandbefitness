@@ -5,10 +5,7 @@ const {
   createExercise,
   getAllExercises,
 } = require("../controllers/exerciseController");
-const {
-  authenticateJWT,
-  authorizeRoles,
-} = require("../middleware/authMiddleware");
+const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
 /**
  * @swagger
@@ -59,8 +56,8 @@ const {
  */
 router.post(
   "/",
-  authenticateJWT,
-  authorizeRoles("admin"),
+  authMiddleware,
+  requireRole("admin"),
   validateExercise,
   createExercise
 );
@@ -101,6 +98,6 @@ router.post(
  *       401:
  *         description: User not authorized
  */
-router.get("/", authenticateJWT, getAllExercises);
+router.get("/", authMiddleware, getAllExercises);
 
 module.exports = router;

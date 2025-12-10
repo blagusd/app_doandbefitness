@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 const progressRoutes = require("./routes/progressRoutes");
@@ -6,9 +7,10 @@ const exerciseRoutes = require("./routes/exerciseRoutes");
 const planRoutes = require("./routes/planRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const securityMiddleware = require("./middleware/securityMiddleware");
-const { swaggerUi, specs } = require("./swagger");
+const { swaggerUi, specs } = require("./config/swagger");
 
 const app = express();
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 securityMiddleware(app);
 

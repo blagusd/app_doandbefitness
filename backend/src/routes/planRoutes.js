@@ -2,10 +2,7 @@ const express = require("express");
 const { validatePlan } = require("../middleware/validationMiddleware");
 const router = express.Router();
 const { createPlan, getUserPlans } = require("../controllers/planController");
-const {
-  authenticateJWT,
-  authorizeRoles,
-} = require("../middleware/authMiddleware");
+const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
 /**
  * @swagger
@@ -56,8 +53,8 @@ const {
  */
 router.post(
   "/",
-  authenticateJWT,
-  authorizeRoles("admin"),
+  authMiddleware,
+  requireRole("admin"),
   validatePlan,
   createPlan
 );
@@ -107,6 +104,6 @@ router.post(
  *       404:
  *         description: User not found
  */
-router.get("/:userId", authenticateJWT, getUserPlans);
+router.get("/:userId", authMiddleware, getUserPlans);
 
 module.exports = router;
