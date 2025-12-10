@@ -3,7 +3,7 @@ import "./RegisterModal.css";
 
 function RegisterModal({ onClose }) {
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     password: "",
   });
@@ -41,9 +41,9 @@ function RegisterModal({ onClose }) {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            name="name"
+            name="fullName"
             placeholder="Full Name"
-            value={formData.name}
+            value={formData.fullName}
             onChange={handleChange}
             required
           />
