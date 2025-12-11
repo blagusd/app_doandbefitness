@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./LoginModal.css";
 import { useNavigate } from "react-router-dom";
 
-function LoginModal({ onClose }) {
+function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -30,13 +30,13 @@ function LoginModal({ onClose }) {
 
       const result = await response.json();
 
-      // spremi token u localStorage
+      // save token in localStorage
       localStorage.setItem("token", result.token);
 
       alert("Login successful!");
       onClose();
-
-      // preusmjeri na dashboard
+      onLoginSuccess();
+      // re-route to dashboard
       navigate("/dashboard");
     } catch (error) {
       alert("Error logging in: " + error.message);
@@ -68,6 +68,14 @@ function LoginModal({ onClose }) {
             Login
           </button>
         </form>
+        <div className="modal-links">
+          <button className="link-btn" onClick={onRegister}>
+            Register
+          </button>
+          <button className="link-btn" onClick={onForgot}>
+            Password forgotten?
+          </button>
+        </div>
         <button className="close-btn" onClick={onClose}>
           ×
         </button>

@@ -1,0 +1,46 @@
+.pricing {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-table th,
+.pricing-table td {
+  padding: 1rem;
+  border: 1px solid #ddd;
+}
+
+.pricing-table th {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.pricing-table tr.basic {
+  background-color: #f0f8ff; /* light blue */
+}
+
+.pricing-table tr.student {
+  background-color: #fff8e1; /* light orange */
+}
+
+.pricing-table tr.pro {
+  background-color: #e6f7f1; /* light green */
+}
+
+.pricing-table tr.elite {
+  background-color: #f9f0f6; /* light purple */
+}
+
+.pricing-table tr:hover {
+  background-color: var(--color-contrast);
+  color: #fff;
+  cursor: pointer;
+}
