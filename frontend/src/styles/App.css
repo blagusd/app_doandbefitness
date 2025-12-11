@@ -13,7 +13,7 @@
 
 .logo {
   height: 100px;
-  margin-left: 2rem;
+  margin-left: 3rem;
 }
 
 .nav-right {
@@ -45,15 +45,4 @@
 
 .login-btn:hover {
   background-color: var(--color-primary-dark);
-}
-
-/* Landing page */
-.landing {
-  padding: 2rem;
-  text-align: center;
-}
-
-.landing h2 {
-  color: var(--color-primary);
-  margin-bottom: 1rem;
 }

@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./views/DashView";
 import ResetPasswordView from "./views/ResetPasswordView";
 import PricingView from "./views/PricingView";
+import LandingView from "./views/LandingView";
 
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
@@ -65,22 +66,7 @@ function App() {
 
         <Routes>
           {/* Landing page */}
-          <Route
-            path="/"
-            element={
-              <main className="landing">
-                <h2>
-                  <i>Dobrodošli</i> - Do&BEFitness
-                </h2>
-                <p>
-                  Bok, ja sam Dorotea - IT stručnjak, ali i certificirana
-                  fitness trenerica. Ovdje ćete pronaći personalizirane planove
-                  treninga, praćenje napretka i motivaciju za postizanje vaših
-                  ciljeva.
-                </p>
-              </main>
-            }
-          />
+          <Route path="/" element={<LandingView />} />
 
           <Route path="/pricing" element={<PricingView />} />
 
