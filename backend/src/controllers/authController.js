@@ -28,7 +28,7 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -37,10 +37,21 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return next(new AppError("❓ Wrong password"));
 
-    // Generate JWT token
-    const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "2h" });
+    // Generate JWT token with role info
+    const token = jwt.sign({ id: user._id, role: user.role }, jwtSecret, {
+      expiresIn: "2h",
+    });
 
-    res.json({ message: "🎆 Login successfull", token });
+    res.json({
+      message: "🎆 Login successful",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (err) {
     next(err);
   }

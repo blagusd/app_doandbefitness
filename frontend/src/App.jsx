@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Dashboard from "./views/DashView";
+import AdminDashboard from "./views/AdminDashView";
 import ResetPasswordView from "./views/ResetPasswordView";
 import PricingView from "./views/PricingView";
 import LandingView from "./views/LandingView";
@@ -35,6 +36,11 @@ function App() {
     setIsLoggedIn(false);
     window.location.href = "/";
   };
+
+  const role = localStorage.getItem("role");
+  let dashView;
+  if (role === "admin") dashView = <AdminDashboard />;
+  else dashView = <Dashboard />;
 
   return (
     <Router>
@@ -73,11 +79,7 @@ function App() {
           {/* Protected dashboard */}
           <Route
             path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute>{dashView}</ProtectedRoute>}
           />
           <Route
             path="/reset-password/:token"

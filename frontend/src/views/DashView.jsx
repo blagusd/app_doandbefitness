@@ -1,49 +1,86 @@
+import "./DashView.css";
 import { useEffect, useState } from "react";
 
-function Dashboard() {
-  const [userData, setUserData] = useState(null);
+function Dashboard({ userId }) {
+  const [plan, setPlan] = useState(null);
+  const [selectedWeek, setSelectedWeek] = useState(1);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    const fetchData = async () => {
+    const fetchPlan = async () => {
       try {
-        const response = await fetch("http://localhost:5000/users/me", {
+        const res = await fetch(`/api/plans/${userId}/week/${selectedWeek}`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
+        if (!res.ok) {
+          throw new Error("Error while getting the plan...");
         }
 
-        const data = await response.json();
-        setUserData(data);
+        const data = await res.json();
+        setPlan(data);
       } catch (err) {
         console.error(err);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchPlan();
+  }, [userId, selectedWeek]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/"; // verify redirection to landing page
-  };
+  if (!plan) return <p>Učitavanje...</p>;
 
   return (
     <div className="dashboard">
-      <h2>Dashboard</h2>
-      {userData ? (
-        <div>
-          <p>Welcome, {userData.fullName}!</p>
-          <p>Email: {userData.email}</p>
-        </div>
-      ) : (
-        <p>Loading user data...</p>
-      )}
+      <aside className="sidebar">
+        {[1, 2, 3, 4].map((week) => (
+          <div
+            key={week}
+            className={selectedWeek === week ? "active" : ""}
+            onClick={() => setSelectedWeek(week)}
+          >
+            Tjedan {week}
+          </div>
+        ))}
+      </aside>
+
+      <main className="main-view">
+        <h2>
+          {plan.name} — Tjedan {plan.weekNumber}
+        </h2>
+        {plan.workouts.map((workout, idx) => (
+          <div className="training-block" key={idx}>
+            <h3>{workout.day}</h3>
+            {workout.exercises.map((ex) => (
+              <div className="exercise" key={ex._id}>
+                <h4>{ex.name}</h4>
+                {ex.youtubeLink && (
+                  <iframe
+                    width="100%"
+                    height="200"
+                    src={ex.youtubeLink}
+                    title={ex.name}
+                    frameBorder="0"
+                    allowFullScreen
+                  ></iframe>
+                )}
+                <textarea placeholder="Bilješke..." defaultValue={ex.notes} />
+                <div className="inputs">
+                  <label>
+                    Ponavljanja:
+                    <input type="number" />
+                  </label>
+                  <label>
+                    Kilaža (kg):
+                    <input type="number" />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </main>
     </div>
   );
 }

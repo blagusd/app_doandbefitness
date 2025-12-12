@@ -15,13 +15,15 @@ const authMiddleware = async (req, res, next) => {
 
     // Check token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Get user from the base to know his role
     const user = await User.findById(decoded.id);
     if (!user)
       return res.status(404).json({ message: "🕵️ User does not exist" });
 
-    req.user = user; // save data from token
+    req.user = {
+      id: user._id,
+      email: user.email,
+      role: user.role || decoded.role,
+    };
 
     next(); // continue on route
   } catch (err) {

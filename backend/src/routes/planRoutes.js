@@ -1,7 +1,11 @@
 const express = require("express");
 const { validatePlan } = require("../middleware/validationMiddleware");
 const router = express.Router();
-const { createPlan, getUserPlans } = require("../controllers/planController");
+const {
+  createPlan,
+  getUserPlans,
+  getUserPlanByWeek,
+} = require("../controllers/planController");
 const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
 /**
@@ -105,5 +109,6 @@ router.post(
  *         description: User not found
  */
 router.get("/:userId", authMiddleware, getUserPlans);
+router.get("/:userId/week/:weekNumber", authMiddleware, getUserPlanByWeek);
 
 module.exports = router;

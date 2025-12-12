@@ -32,6 +32,9 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
 
       // save token in localStorage
       localStorage.setItem("token", result.token);
+      if (result.user && result.user.role) {
+        localStorage.setItem("role", result.user.role);
+      }
 
       alert("Login successful!");
       onClose();

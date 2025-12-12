@@ -33,3 +33,26 @@ exports.getUserPlans = async (req, res) => {
     next(err);
   }
 };
+
+exports.getUserPlanByWeek = async (req, res) => {
+  try {
+    const { userId, weekNumber } = req.params;
+
+    const plan = await Plan.findOne({
+      assignedTo: userId,
+      weekNumber,
+    }).populate("workouts.exercises");
+
+    if (!plan) {
+      return res.status(404).json({ message: "Plan not found" });
+    }
+
+    if (req.user.id !== userId && req.user.role !== "admin") {
+      return res.status(403).json({ message: "🚫 Access Denied" });
+    }
+
+    res.json(plan);
+  } catch (err) {
+    res.status(500).json({ message: "🚨 Server error", error: err });
+  }
+};

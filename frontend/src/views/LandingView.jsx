@@ -23,9 +23,11 @@ function LandingView() {
 
           <p className="story">
             <strong>Ja Vam mogu pomoć.</strong> Svi ovi izazovi su mi dobro
-            poznati i najviše sam učila kroz vlastito iskustvo. Svakoga očekuje{" "}
-            <span className="emphasis">individualni plan</span>, savjeti uz
-            prehranu i ono što me čini drugačijom ➡️
+            poznati i najviše sam učila kroz vlastito iskustvo.{" "}
+          </p>
+          <p className="story">
+            Svakoga očekuje <span className="emphasis">individualni plan</span>,
+            savjeti uz prehranu i ono što me čini drugačijom ➡️
             <span className="emphasis">
               hrpa vježbi za mobilnost i opuštanje!
             </span>
@@ -42,27 +44,34 @@ function LandingView() {
             <h3 className="highlight">Što dobivate uz Do&BEFitness?</h3>
 
             <p className="check-line">
+              {" "}
               Pristup vlastitoj stranici gdje se vježbe ažuriraju
-              <span className="emphasis">na tjednoj bazi</span>;
+              <span className="emphasis"> na tjednoj bazi</span>;
             </p>
             <p className="check-line">
+              {" "}
               3 full‑body ili 4 treninga (2 gornji dio + 2 donji dio)
-              <span className="emphasis">ovisno o preferencijama</span>;
+              <span className="emphasis"> ovisno o preferencijama</span>;
             </p>
             <p className="check-line">
+              {" "}
               Praćenje napretka i analiza - tjelesna težina, napredak za svaku
-              vježbu,<span className="emphasis">sve vizualizirano</span>;
+              vježbu,<span className="emphasis"> sve vizualizirano</span>;
             </p>
             <p className="check-line">
+              {" "}
               Savjeti vezani za prehranu + prijedlozi
-              <span className="emphasis">osobnih recepata</span>
+              <span className="emphasis"> osobnih recepata</span>
             </p>
 
             <p className="story">
               <strong>Zainteresirani?</strong> Registrirajte se već danas. Nakon
               prijave šaljem inicijalni upitnik, a dalje se dogovaramo oko
-              detalja putem e‑maila. Za sva pitanja uvijek sam dostupna, a tu je
-              i<span className="emphasis"> Viber grupa </span> kojoj se
+              detalja putem e‑maila.{" "}
+            </p>
+            <p className="story">
+              Za sva pitanja uvijek sam dostupna, a tu je i
+              <span className="emphasis"> Viber grupa </span> kojoj se
               pridružuju svi klijenti - namijenjena razmjeni iskustava i
               međusobnoj podršci.
             </p>
@@ -73,17 +82,37 @@ function LandingView() {
       <section className="reviews">
         <h3>Što kažu naši korisnici</h3>
         <div className="review-grid">
-          <blockquote>
-            “Dorotea mi je pomogla da napokon pronađem rutinu koja mi odgovara.”
-          </blockquote>
-          <blockquote>
-            “Planovi su jasni, motivacija ogromna — osjećam se bolje nego ikad.”
-          </blockquote>
-          <blockquote>
-            “Najbolja odluka bila je krenuti s Do&BEFitness. Rezultati su tu!”
-          </blockquote>
+          <div className="review-card">
+            <div className="avatar">D</div>
+            <blockquote>
+              “Dorotea mi je pomogla da napokon pronađem rutinu koja mi
+              odgovara.”
+            </blockquote>
+            <p className="author">Ana K.</p>
+          </div>
+
+          <div className="review-card">
+            <div className="avatar">M</div>
+            <blockquote>
+              “Planovi su jasni, motivacija ogromna — osjećam se bolje nego
+              ikad.”
+            </blockquote>
+            <p className="author">Marko P.</p>
+          </div>
+
+          <div className="review-card">
+            <div className="avatar">L</div>
+            <blockquote>
+              “Najbolja odluka bila je krenuti s Do&BEFitness. Rezultati su tu!”
+            </blockquote>
+            <p className="author">Lucija R.</p>
+          </div>
         </div>
       </section>
+      <p className="note">
+        Treninzi su osmišljeni za izvođenje u teretani, a ukoliko se pokaže veći
+        interes, napravit ćemo program i za kućne treninge.
+      </p>
     </main>
   );
 }
