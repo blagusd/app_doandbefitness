@@ -1,11 +1,14 @@
 import "./DashView.css";
 import { useEffect, useState } from "react";
 
-function Dashboard({ userId }) {
+function Dashboard() {
+  const userId = localStorage.getItem("userId");
   const [plan, setPlan] = useState(null);
   const [selectedWeek, setSelectedWeek] = useState(1);
 
   useEffect(() => {
+    if (!userId) return;
+
     const fetchPlan = async () => {
       try {
         const res = await fetch(`/api/plans/${userId}/week/${selectedWeek}`, {
@@ -29,6 +32,10 @@ function Dashboard({ userId }) {
     fetchPlan();
   }, [userId, selectedWeek]);
 
+  if (!userId) {
+    return <p>Nije pronađen korisnik.</p>;
+  }
+
   if (!plan) return <p>Učitavanje...</p>;
 
   return (
@@ -49,12 +56,15 @@ function Dashboard({ userId }) {
         <h2>
           {plan.name} — Tjedan {plan.weekNumber}
         </h2>
+
         {plan.workouts.map((workout, idx) => (
           <div className="training-block" key={idx}>
             <h3>{workout.day}</h3>
+
             {workout.exercises.map((ex) => (
               <div className="exercise" key={ex._id}>
                 <h4>{ex.name}</h4>
+
                 {ex.youtubeLink && (
                   <iframe
                     width="100%"
@@ -65,12 +75,15 @@ function Dashboard({ userId }) {
                     allowFullScreen
                   ></iframe>
                 )}
+
                 <textarea placeholder="Bilješke..." defaultValue={ex.notes} />
+
                 <div className="inputs">
                   <label>
                     Ponavljanja:
                     <input type="number" />
                   </label>
+
                   <label>
                     Kilaža (kg):
                     <input type="number" />

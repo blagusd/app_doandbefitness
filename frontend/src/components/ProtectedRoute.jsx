@@ -4,7 +4,6 @@ function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    // ako nema tokena, preusmjeri na login
     return <Navigate to="/login" replace />;
   }
 

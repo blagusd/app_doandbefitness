@@ -1,27 +1,198 @@
+/* ===========================
+   ADMIN DASHBOARD LAYOUT
+=========================== */
 .admin-dashboard {
   display: flex;
-  min-height: 80vh;
+  height: calc(100vh - 100px);
+  overflow: hidden;
+  background: #fafafa;
 }
 
-.sidebar {
-  width: 250px;
+/* ===========================
+   SIDEBAR
+=========================== */
+.admin-dashboard .sidebar {
+  width: 260px;
   background: #f4f4f4;
-  padding: 1rem;
+  padding: 1.5rem;
   border-right: 1px solid #ddd;
+  overflow-y: auto;
 }
 
-.sidebar li {
+.admin-dashboard .sidebar h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.admin-dashboard .sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-dashboard .sidebar li {
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: 0.95rem;
 }
 
-.sidebar li.active {
+.admin-dashboard .sidebar li:hover {
+  background: #e0e0e0;
+}
+
+.admin-dashboard .sidebar li.active {
   background: var(--color-primary);
   color: #fff;
-  border-radius: 6px;
 }
 
-.main-view {
+/* ===========================
+   MAIN VIEW
+=========================== */
+.admin-dashboard .main-view {
   flex: 1;
   padding: 2rem;
+  overflow-y: auto;
+}
+
+/* ===========================
+   WEEK BUILDER
+=========================== */
+.week-builder label {
+  display: block;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ===========================
+   DAY CARD
+=========================== */
+.day-card {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  padding: 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.day-card h4 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+/* ===========================
+   EXERCISE LIST
+=========================== */
+.day-card ul {
+  padding: 0;
+  margin: 0 0 1rem 0;
+  list-style: none;
+}
+
+.day-card li {
+  margin-bottom: 1.2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.day-card li:last-child {
+  border-bottom: none;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.day-card li p {
+  margin: 0.2rem 0;
+  line-height: 1.4;
+}
+
+.day-card button {
+  margin-top: 0.5rem;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.day-card button:hover {
+  background: #e63b3b;
+}
+
+/* ===========================
+   VIDEO PREVIEW
+=========================== */
+.video-preview {
+  margin-top: 0.8rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+/* ===========================
+   EXERCISE FORM
+=========================== */
+.exercise-form {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.exercise-form input,
+.exercise-form textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.exercise-form textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.exercise-form button {
+  margin-top: 0.5rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.exercise-form button:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ===========================
+   SAVE PLAN BUTTON
+=========================== */
+.save-plan-btn {
+  margin-top: 2rem;
+  padding: 0.8rem 1.2rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.save-plan-btn:hover {
+  background: var(--color-primary-dark);
 }

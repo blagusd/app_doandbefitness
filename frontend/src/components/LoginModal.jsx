@@ -36,7 +36,6 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
         localStorage.setItem("role", result.user.role);
       }
 
-      alert("Login successful!");
       onClose();
       onLoginSuccess();
       // re-route to dashboard

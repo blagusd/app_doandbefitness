@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -18,13 +18,18 @@ import logo from "./assets/logo_favicon.png";
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [showForgot, setShowForgot] = useState(false);
 
-  // Listen for storage changes to update login state across tabs
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+
+  // NEW: role stored in state (not frozen from localStorage)
+  const [role, setRole] = useState(localStorage.getItem("role"));
+
+  // Listen for storage changes (multi-tab sync)
   useEffect(() => {
     const checkToken = () => {
       setIsLoggedIn(!!localStorage.getItem("token"));
+      setRole(localStorage.getItem("role"));
     };
 
     window.addEventListener("storage", checkToken);
@@ -33,14 +38,14 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setIsLoggedIn(false);
+    setRole(null);
     window.location.href = "/";
   };
 
-  const role = localStorage.getItem("role");
-  let dashView;
-  if (role === "admin") dashView = <AdminDashboard />;
-  else dashView = <Dashboard />;
+  // NEW: dynamic dashboard selection
+  const dashView = role === "admin" ? <AdminDashboard /> : <Dashboard />;
 
   return (
     <Router>
@@ -52,12 +57,14 @@ function App() {
           </div>
 
           <div className="nav-right">
-            <a href="/" className="nav-link">
+            <Link to="/" className="nav-link">
               Početna
-            </a>
-            <a href="/pricing" className="nav-link">
+            </Link>
+
+            <Link to="/pricing" className="nav-link">
               Cjenik
-            </a>
+            </Link>
+
             {!isLoggedIn ? (
               <button className="login-btn" onClick={() => setShowLogin(true)}>
                 LogIn
@@ -71,9 +78,7 @@ function App() {
         </nav>
 
         <Routes>
-          {/* Landing page */}
           <Route path="/" element={<LandingView />} />
-
           <Route path="/pricing" element={<PricingView />} />
 
           {/* Protected dashboard */}
@@ -81,12 +86,14 @@ function App() {
             path="/dashboard"
             element={<ProtectedRoute>{dashView}</ProtectedRoute>}
           />
+
           <Route
             path="/reset-password/:token"
             element={<ResetPasswordView />}
           />
         </Routes>
 
+        {/* Modals */}
         {showLogin && (
           <LoginModal
             onClose={() => setShowLogin(false)}
@@ -98,7 +105,10 @@ function App() {
               setShowLogin(false);
               setShowForgot(true);
             }}
-            onLoginSuccess={() => setIsLoggedIn(true)}
+            onLoginSuccess={() => {
+              setIsLoggedIn(true);
+              setRole(localStorage.getItem("role")); // NEW
+            }}
           />
         )}
 
