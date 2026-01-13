@@ -1,36 +1,30 @@
 const AppError = require("../utils/AppError");
 const Plan = require("../models/Plan");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 
 exports.createPlan = async (req, res, next) => {
   try {
     const { name, weekNumber, workouts, assignedTo } = req.body;
-
-    const existing = await Plan.findOneAndDelete({
-      assignedTo,
-      weekNumber: Number(weekNumber),
-    });
-
-    if (existing) {
-      return res
-        .status(409)
-        .json({ message: "Plan for this week already exists" });
-    }
-
+    const normalizedWorkouts = workouts.map((day) => ({
+      day: day.day,
+      exercises: day.exercises.map((id) => new mongoose.Types.ObjectId(id)),
+    }));
+    await Plan.findOneAndDelete({ assignedTo, weekNumber: Number(weekNumber) });
     const plan = new Plan({
       name,
       weekNumber: Number(weekNumber),
-      workouts,
+      workouts: normalizedWorkouts,
       assignedTo,
     });
-
     await plan.save();
-
     await User.findByIdAndUpdate(assignedTo, {
-      $push: { weeklyPlans: plan._id },
+      $addToSet: { weeklyPlans: plan._id },
     });
-
-    res.status(201).json(plan);
+    const populated = await Plan.findById(plan._id).populate(
+      "workouts.exercises"
+    );
+    res.status(201).json(populated);
   } catch (err) {
     next(err);
   }
@@ -39,9 +33,19 @@ exports.createPlan = async (req, res, next) => {
 exports.getUserPlans = async (req, res, next) => {
   try {
     const userId = req.params.userId;
+    console.log("getUserPlans called for userId param:", req.params.userId);
+    console.log("req.user from auth:", req.user);
+
+    if (req.user.id !== userId && req.user.role !== "admin") {
+      console.log("Access denied for", req.user.id);
+      return res.status(403).json({ message: "🚫 Access Denied" });
+    }
+
     const plans = await Plan.find({ assignedTo: userId }).populate(
       "workouts.exercises"
     );
+
+    console.log("Found plans count:", plans.length);
     res.status(200).json(plans);
   } catch (err) {
     next(err);

@@ -5,6 +5,10 @@ const authMiddleware = async (req, res, next) => {
   try {
     // Expected token at Authorization header
     const authHeader = req.headers.authorization;
+    console.log(
+      "authMiddleware invoked. Authorization header:",
+      req.headers.authorization
+    );
     if (!authHeader)
       return res
         .status(401)
@@ -15,6 +19,9 @@ const authMiddleware = async (req, res, next) => {
 
     // Check token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("auth decoded:", decoded);
+    console.log("found user id:", user?._id?.toString());
+
     const user = await User.findById(decoded.id);
     if (!user)
       return res.status(404).json({ message: "🕵️ User does not exist" });

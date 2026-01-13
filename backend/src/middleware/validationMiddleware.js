@@ -30,8 +30,11 @@ exports.validateExercise = (req, res, next) => {
   const schema = Joi.object({
     name: Joi.string().min(2).required(),
     youtubeLink: Joi.string().uri().required(),
-    muscleGroup: Joi.string().optional(),
-    notes: Joi.string().optional(),
+    muscleGroup: Joi.string().allow("").optional(),
+    notes: Joi.string().allow("").optional(),
+    reps: Joi.number().optional(),
+    sets: Joi.number().optional(),
+    weight: Joi.number().allow("").optional(),
   });
   const { error } = schema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });

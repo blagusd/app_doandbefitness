@@ -16,7 +16,7 @@
   background: var(--color-bg);
   border-radius: 8px;
   padding: 2rem;
-  width: 320px;
+  width: 300px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   position: relative;
 }
@@ -28,15 +28,12 @@
 }
 
 .modal-content input {
-  width: 100%;
   padding: 0.75rem;
-  margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
 
 .btn-primary {
-  width: 100%;
   padding: 0.75rem;
   background-color: var(--color-primary);
   color: #fff;
@@ -44,6 +41,14 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+}
+
+.modal-content input,
+.btn-primary {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
 }
 
 .btn-primary:hover {

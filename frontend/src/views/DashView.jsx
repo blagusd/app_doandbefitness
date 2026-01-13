@@ -3,96 +3,142 @@ import { useEffect, useState } from "react";
 
 function Dashboard() {
   const userId = localStorage.getItem("userId");
-  const [plan, setPlan] = useState(null);
-  const [selectedWeek, setSelectedWeek] = useState(1);
+  const [plans, setPlans] = useState([]);
+  const [expandedWeek, setExpandedWeek] = useState(null);
+  const [completedWeeks, setCompletedWeeks] = useState([]);
+  const [feedbackWeek, setFeedbackWeek] = useState(null);
+
+  console.log("Plans:", plans);
 
   useEffect(() => {
     if (!userId) return;
 
-    const fetchPlan = async () => {
-      try {
-        const res = await fetch(`/api/plans/${userId}/week/${selectedWeek}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+    const fetchPlans = async () => {
+      const res = await fetch(`/api/plans/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-        if (!res.ok) {
-          throw new Error("Error while getting the plan...");
-        }
+      const data = await res.json();
+      const sorted = data.sort((a, b) => a.weekNumber - b.weekNumber);
 
-        const data = await res.json();
-        setPlan(data);
-      } catch (err) {
-        console.error(err);
-      }
+      setPlans(sorted);
+
+      setCompletedWeeks(data[0]?.assignedTo?.completedWeeks || []);
     };
 
-    fetchPlan();
-  }, [userId, selectedWeek]);
+    fetchPlans();
+  }, [userId]);
 
-  if (!userId) {
-    return <p>Nije pronađen korisnik.</p>;
-  }
+  const toggleWeek = (week) => {
+    setExpandedWeek(expandedWeek === week ? null : week);
+  };
 
-  if (!plan) return <p>Učitavanje...</p>;
+  const markWeekCompleted = (week) => {
+    setFeedbackWeek(week);
+  };
+
+  const sendFeedback = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    await fetch("/api/send-feedback", {
+      method: "POST",
+      body: formData,
+    });
+
+    setCompletedWeeks([...completedWeeks, feedbackWeek]);
+    setFeedbackWeek(null);
+  };
+
+  if (!plans.length) return <p>Učitavanje...</p>;
 
   return (
     <div className="dashboard">
-      <aside className="sidebar">
-        {[1, 2, 3, 4].map((week) => (
-          <div
-            key={week}
-            className={selectedWeek === week ? "active" : ""}
-            onClick={() => setSelectedWeek(week)}
-          >
-            Tjedan {week}
-          </div>
-        ))}
-      </aside>
-
       <main className="main-view">
-        <h2>
-          {plan.name} — Tjedan {plan.weekNumber}
-        </h2>
+        <h2>Tvoji tjedni planovi</h2>
 
-        {plan.workouts.map((workout, idx) => (
-          <div className="training-block" key={idx}>
-            <h3>{workout.day}</h3>
+        {plans.map((plan) => {
+          const isExpanded = expandedWeek === plan.weekNumber;
+          const isCompleted = completedWeeks.includes(plan.weekNumber);
 
-            {workout.exercises.map((ex) => (
-              <div className="exercise" key={ex._id}>
-                <h4>{ex.name}</h4>
+          return (
+            <div className="week-block" key={plan._id}>
+              <div
+                className="week-header"
+                onClick={() => toggleWeek(plan.weekNumber)}
+              >
+                <span>Tjedan {plan.weekNumber}</span>
 
-                {ex.youtubeLink && (
-                  <iframe
-                    width="100%"
-                    height="200"
-                    src={ex.youtubeLink}
-                    title={ex.name}
-                    frameBorder="0"
-                    allowFullScreen
-                  ></iframe>
+                {isCompleted && <span className="checkmark">✔</span>}
+                {!isCompleted && (
+                  <span className="arrow">{isExpanded ? "▲" : "▼"}</span>
                 )}
-
-                <textarea placeholder="Bilješke..." defaultValue={ex.notes} />
-
-                <div className="inputs">
-                  <label>
-                    Ponavljanja:
-                    <input type="number" />
-                  </label>
-
-                  <label>
-                    Kilaža (kg):
-                    <input type="number" />
-                  </label>
-                </div>
               </div>
-            ))}
+
+              {isExpanded && (
+                <div className="week-content">
+                  {plan.workouts.map((day, idx) => (
+                    <div key={idx} className="day-block">
+                      <h3>{day.day}</h3>
+
+                      {day.exercises.map((ex) => (
+                        <div className="exercise" key={ex._id}>
+                          <h4>{ex.name}</h4>
+
+                          {ex.youtubeLink && (
+                            <iframe
+                              width="100%"
+                              height="200"
+                              src={ex.youtubeLink}
+                              title={ex.name}
+                              frameBorder="0"
+                              allowFullScreen
+                            ></iframe>
+                          )}
+
+                          <p>
+                            <strong>Bilješke trenera:</strong> {ex.notes || "—"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+
+                  {!isCompleted && (
+                    <button
+                      className="finish-week-btn"
+                      onClick={() => markWeekCompleted(plan.weekNumber)}
+                    >
+                      Tjedan završen
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {feedbackWeek && (
+          <div className="feedback-modal">
+            <form onSubmit={sendFeedback}>
+              <h3>Povratna informacija za tjedan {feedbackWeek}</h3>
+
+              <textarea
+                name="feedback"
+                placeholder="Kako je prošao tjedan?"
+                required
+              />
+
+              <button type="submit">Pošalji</button>
+              <button type="button" onClick={() => setFeedbackWeek(null)}>
+                Odustani
+              </button>
+            </form>
           </div>
-        ))}
+        )}
       </main>
     </div>
   );
