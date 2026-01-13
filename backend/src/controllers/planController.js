@@ -2,13 +2,30 @@ const AppError = require("../utils/AppError");
 const Plan = require("../models/Plan");
 const User = require("../models/User");
 
-exports.createPlan = async (req, res) => {
+exports.createPlan = async (req, res, next) => {
   try {
     const { name, weekNumber, workouts, assignedTo } = req.body;
-    const plan = new Plan({ name, weekNumber, workouts, assignedTo });
+
+    const existing = await Plan.findOneAndDelete({
+      assignedTo,
+      weekNumber: Number(weekNumber),
+    });
+
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Plan for this week already exists" });
+    }
+
+    const plan = new Plan({
+      name,
+      weekNumber: Number(weekNumber),
+      workouts,
+      assignedTo,
+    });
+
     await plan.save();
 
-    // Add plan to the user
     await User.findByIdAndUpdate(assignedTo, {
       $push: { weeklyPlans: plan._id },
     });
@@ -19,28 +36,26 @@ exports.createPlan = async (req, res) => {
   }
 };
 
-exports.getUserPlans = async (req, res) => {
+exports.getUserPlans = async (req, res, next) => {
   try {
     const userId = req.params.userId;
     const plans = await Plan.find({ assignedTo: userId }).populate(
       "workouts.exercises"
     );
-    if (!plans || plans.length === 0) {
-      return next(new AppError("📩 Cannot get the plans", 404));
-    }
     res.status(200).json(plans);
   } catch (err) {
     next(err);
   }
 };
 
-exports.getUserPlanByWeek = async (req, res) => {
+exports.getUserPlanByWeek = async (req, res, next) => {
   try {
     const { userId, weekNumber } = req.params;
+    const week = Number(weekNumber);
 
     const plan = await Plan.findOne({
       assignedTo: userId,
-      weekNumber,
+      weekNumber: week,
     }).populate("workouts.exercises");
 
     if (!plan) {
@@ -53,6 +68,25 @@ exports.getUserPlanByWeek = async (req, res) => {
 
     res.json(plan);
   } catch (err) {
-    res.status(500).json({ message: "🚨 Server error", error: err });
+    next(err);
+  }
+};
+
+exports.deletePlanByWeek = async (req, res, next) => {
+  try {
+    const { userId, weekNumber } = req.params;
+
+    const deleted = await Plan.findOneAndDelete({
+      assignedTo: userId,
+      weekNumber: Number(weekNumber),
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Plan not found" });
+    }
+
+    res.json({ message: "Plan deleted" });
+  } catch (err) {
+    next(err);
   }
 };

@@ -196,3 +196,20 @@
 .save-plan-btn:hover {
   background: var(--color-primary-dark);
 }
+
+.delete-plan-btn {
+  margin-top: 2rem;
+  margin-left: 2rem;
+  padding: 0.8rem 1.2rem;
+  background: var(--color-contrast);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.delete-plan-btn:hover {
+  background: var(--color-primary-dark);
+}

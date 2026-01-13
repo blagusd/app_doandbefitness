@@ -5,6 +5,7 @@ const {
   createPlan,
   getUserPlans,
   getUserPlanByWeek,
+  deletePlanByWeek,
 } = require("../controllers/planController");
 const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
@@ -110,5 +111,11 @@ router.post(
  */
 router.get("/:userId", authMiddleware, getUserPlans);
 router.get("/:userId/week/:weekNumber", authMiddleware, getUserPlanByWeek);
+router.delete(
+  "/:userId/week/:weekNumber",
+  authMiddleware,
+  requireRole("admin"),
+  deletePlanByWeek
+);
 
 module.exports = router;

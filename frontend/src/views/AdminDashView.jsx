@@ -26,7 +26,12 @@ function AdminDashboard() {
     youtubeLink: "",
     muscleGroup: "",
     notes: "",
+    reps: "",
+    sets: "",
+    weight: "",
   });
+
+  const [userPlans, setUserPlans] = useState([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -66,6 +71,46 @@ function AdminDashboard() {
     fetchUsers();
     fetchExercises();
   }, []);
+
+  // 🔥 Fetch plan when user or week changes
+  useEffect(() => {
+    if (!selectedUser) return;
+
+    const fetchPlan = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/plans/${selectedUser._id}/week/${weekNumber}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (res.status === 404) {
+          console.log("Nema plana za ovaj tjedan — generiram prazne dane.");
+
+          const numDays = selectedUser.planDays || 3;
+          const days = Array.from({ length: numDays }, (_, i) => ({
+            day: `Dan ${i + 1}`,
+            exercises: [],
+          }));
+
+          setWeekDays(days);
+          return;
+        }
+
+        const plan = await res.json();
+        console.log("Učitani plan:", plan);
+
+        setWeekDays(plan.workouts);
+      } catch (err) {
+        console.error("Greška pri dohvaćanju plana:", err);
+      }
+    };
+
+    fetchPlan();
+  }, [selectedUser, weekNumber]);
 
   const createExercise = async () => {
     const res = await fetch("http://localhost:5000/api/exercises", {
@@ -114,6 +159,8 @@ function AdminDashboard() {
       workouts: weekDays,
     };
 
+    console.log("Šaljem payload:", payload);
+
     const res = await fetch("http://localhost:5000/api/plans", {
       method: "POST",
       headers: {
@@ -123,21 +170,33 @@ function AdminDashboard() {
       body: JSON.stringify(payload),
     });
 
-    if (res.ok) {
-      alert("Plan uspješno spremljen!");
-    } else {
-      alert("Greška pri spremanju plana.");
+    if (!res.ok) {
+      const err = await res.json();
+      alert("Greška pri spremanju plana: " + err.message);
+      return;
     }
+
+    alert("Plan uspješno spremljen!");
+
+    setWeekNumber((prev) => prev); // trigger useEffect
   };
 
-  const handleUserSelect = (user) => {
+  const handleUserSelect = async (user) => {
     setSelectedUser(user);
-    const numDays = user.planDays || 3;
-    const days = Array.from({ length: numDays }, (_, i) => ({
-      day: `Dan ${i + 1}`,
-      exercises: [],
-    }));
-    setWeekDays(days);
+    setWeekNumber(1);
+
+    const res = await fetch(`http://localhost:5000/api/plans/${user._id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (res.ok) {
+      const plans = await res.json();
+      setUserPlans(plans);
+    } else {
+      setUserPlans([]);
+    }
   };
 
   return (
@@ -175,12 +234,28 @@ function AdminDashboard() {
                   value={weekNumber}
                   onChange={(e) => setWeekNumber(Number(e.target.value))}
                 >
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <option key={num} value={num}>
-                      Tjedan {num}
+                  {userPlans.map((p) => (
+                    <option key={p._id} value={p.weekNumber}>
+                      Tjedan {p.weekNumber}
                     </option>
                   ))}
                 </select>
+                <button
+                  onClick={() => {
+                    const nextWeek = selectedUser.weeklyPlans?.length + 1;
+                    setWeekNumber(nextWeek);
+
+                    const numDays = selectedUser.planDays || 3;
+                    const days = Array.from({ length: numDays }, (_, i) => ({
+                      day: `Dan ${i + 1}`,
+                      exercises: [],
+                    }));
+
+                    setWeekDays(days);
+                  }}
+                >
+                  ➕ Dodaj novi tjedan
+                </button>
               </label>
 
               <div className="week-days">
@@ -192,8 +267,12 @@ function AdminDashboard() {
                       <p>Još nema vježbi.</p>
                     ) : (
                       <ul>
-                        {day.exercises.map((exId, i) => {
-                          const ex = exerciseMap[exId];
+                        {day.exercises.map((exItem, i) => {
+                          const ex =
+                            typeof exItem === "string"
+                              ? exerciseMap[exItem]
+                              : exItem;
+
                           return ex ? (
                             <li key={i}>
                               <p>
@@ -206,7 +285,15 @@ function AdminDashboard() {
                               <p>
                                 <strong>Bilješke:</strong> {ex.notes || "—"}
                               </p>
-
+                              <p>
+                                <strong>Ponavljanja:</strong> {ex.reps || "—"}
+                              </p>{" "}
+                              <p>
+                                <strong>Setovi:</strong> {ex.sets || "—"}
+                              </p>{" "}
+                              <p>
+                                <strong>Težina:</strong> {ex.weight || "—"} kg
+                              </p>
                               {ex.youtubeLink && (
                                 <div className="video-preview">
                                   <iframe
@@ -219,7 +306,6 @@ function AdminDashboard() {
                                   ></iframe>
                                 </div>
                               )}
-
                               <button
                                 onClick={() => removeExerciseFromDay(idx, i)}
                               >
@@ -245,7 +331,6 @@ function AdminDashboard() {
                           })
                         }
                       />
-
                       <input
                         type="text"
                         placeholder="YouTube link"
@@ -257,7 +342,6 @@ function AdminDashboard() {
                           })
                         }
                       />
-
                       <input
                         type="text"
                         placeholder="Mišićna skupina"
@@ -269,7 +353,6 @@ function AdminDashboard() {
                           })
                         }
                       />
-
                       <textarea
                         placeholder="Bilješke"
                         value={exerciseForm.notes}
@@ -280,7 +363,39 @@ function AdminDashboard() {
                           })
                         }
                       />
-
+                      <input
+                        type="number"
+                        placeholder="Ponavljanja"
+                        value={exerciseForm.reps}
+                        onChange={(e) =>
+                          setExerciseForm({
+                            ...exerciseForm,
+                            reps: e.target.value,
+                          })
+                        }
+                      />{" "}
+                      <input
+                        type="number"
+                        placeholder="Setovi"
+                        value={exerciseForm.sets}
+                        onChange={(e) =>
+                          setExerciseForm({
+                            ...exerciseForm,
+                            sets: e.target.value,
+                          })
+                        }
+                      />{" "}
+                      <input
+                        type="number"
+                        placeholder="Težina (kg)"
+                        value={exerciseForm.weight}
+                        onChange={(e) =>
+                          setExerciseForm({
+                            ...exerciseForm,
+                            weight: e.target.value,
+                          })
+                        }
+                      />
                       <button onClick={() => addExerciseToDay(idx)}>
                         Dodaj vježbu
                       </button>
@@ -291,6 +406,33 @@ function AdminDashboard() {
 
               <button className="save-plan-btn" onClick={savePlan}>
                 Spremi plan
+              </button>
+              <button
+                className="delete-plan-btn"
+                onClick={async () => {
+                  if (!selectedUser) return;
+
+                  const res = await fetch(
+                    `http://localhost:5000/api/plans/${selectedUser._id}/week/${weekNumber}`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                          "token"
+                        )}`,
+                      },
+                    }
+                  );
+
+                  if (res.ok) {
+                    alert("Plan obrisan");
+                    setWeekDays([]); // reset
+                  } else {
+                    alert("Plan nije pronađen");
+                  }
+                }}
+              >
+                Obriši ovaj tjedan
               </button>
             </section>
           </>
