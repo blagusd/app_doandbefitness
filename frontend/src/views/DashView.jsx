@@ -3,57 +3,154 @@ import { useEffect, useState } from "react";
 
 function Dashboard() {
   const userId = localStorage.getItem("userId");
-  const [plans, setPlans] = useState([]);
-  const [expandedWeek, setExpandedWeek] = useState(null);
+
+  const [plans, setPlans] = useState(null);
   const [completedWeeks, setCompletedWeeks] = useState([]);
+  const [expandedWeek, setExpandedWeek] = useState(null);
   const [feedbackWeek, setFeedbackWeek] = useState(null);
 
-  console.log("Plans:", plans);
-
+  // -----------------------------
+  // FETCH PLANS + USER DATA
+  // -----------------------------
   useEffect(() => {
     if (!userId) return;
 
-    const fetchPlans = async () => {
-      const res = await fetch(`/api/plans/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+    const fetchData = async () => {
+      try {
+        // 1) Fetch plans
+        const resPlans = await fetch(
+          `http://localhost:5000/api/plans/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
 
-      const data = await res.json();
-      const sorted = data.sort((a, b) => a.weekNumber - b.weekNumber);
+        if (!resPlans.ok) {
+          const text = await resPlans.text();
+          console.error("Plans fetch failed:", resPlans.status, text);
+          setPlans([]);
+          return;
+        }
 
-      setPlans(sorted);
+        const plansData = await resPlans.json();
 
-      setCompletedWeeks(data[0]?.assignedTo?.completedWeeks || []);
+        if (!Array.isArray(plansData)) {
+          console.error("Plans are not an array:", plansData);
+          setPlans([]);
+          return;
+        }
+
+        const sorted = plansData.sort((a, b) => a.weekNumber - b.weekNumber);
+        setPlans(sorted);
+
+        // 2) Fetch user (completedWeeks)
+        const resUser = await fetch(
+          `http://localhost:5000/auth/user/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!resUser.ok) {
+          const text = await resUser.text();
+          console.error("User fetch failed:", resUser.status, text);
+          setCompletedWeeks([]);
+        } else {
+          const userData = await resUser.json();
+          setCompletedWeeks(userData.completedWeeks || []);
+        }
+
+        // 3) Auto-open first unfinished week
+        const firstUnfinished =
+          sorted.find((p) => !completedWeeks.includes(p.weekNumber)) ||
+          sorted[0];
+
+        setExpandedWeek(firstUnfinished?.weekNumber || null);
+      } catch (err) {
+        console.error("Error loading dashboard:", err);
+      }
     };
 
-    fetchPlans();
+    fetchData();
   }, [userId]);
 
+  // -----------------------------
+  // TOGGLE WEEK
+  // -----------------------------
   const toggleWeek = (week) => {
     setExpandedWeek(expandedWeek === week ? null : week);
   };
 
+  // -----------------------------
+  // OPEN FEEDBACK MODAL
+  // -----------------------------
   const markWeekCompleted = (week) => {
     setFeedbackWeek(week);
   };
 
+  // -----------------------------
+  // SEND FEEDBACK + MARK WEEK DONE
+  // -----------------------------
   const sendFeedback = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
+    const feedback = e.target.feedback.value;
 
-    await fetch("/api/send-feedback", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      // 1) Send feedback email
+      const resFeedback = await fetch(
+        "http://localhost:5000/api/feedback/send",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            week: feedbackWeek,
+            feedback,
+          }),
+        }
+      );
 
-    setCompletedWeeks([...completedWeeks, feedbackWeek]);
-    setFeedbackWeek(null);
+      if (!resFeedback.ok) {
+        const text = await resFeedback.text();
+        console.error("Feedback send failed:", text);
+      }
+
+      // 2) Mark week completed
+      const res = await fetch(
+        `http://localhost:5000/auth/complete-week/${userId}/${feedbackWeek}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Complete week failed:", text);
+        return;
+      }
+
+      const data = await res.json();
+      setCompletedWeeks(data.completedWeeks);
+
+      // 3) Close modal
+      setFeedbackWeek(null);
+    } catch (err) {
+      console.error("Error sending feedback:", err);
+    }
   };
 
-  if (!plans.length) return <p>Učitavanje...</p>;
+  // -----------------------------
+  // RENDER
+  // -----------------------------
+  if (plans === null) return <p>Učitavanje...</p>;
+  if (plans.length === 0) return <p>Nema dostupnih planova.</p>;
 
   return (
     <div className="dashboard">
@@ -72,8 +169,9 @@ function Dashboard() {
               >
                 <span>Tjedan {plan.weekNumber}</span>
 
-                {isCompleted && <span className="checkmark">✔</span>}
-                {!isCompleted && (
+                {isCompleted ? (
+                  <span className="checkmark">✔</span>
+                ) : (
                   <span className="arrow">{isExpanded ? "▲" : "▼"}</span>
                 )}
               </div>
@@ -88,15 +186,21 @@ function Dashboard() {
                         <div className="exercise" key={ex._id}>
                           <h4>{ex.name}</h4>
 
+                          {/* SAFE YOUTUBE PREVIEW */}
                           {ex.youtubeLink && (
-                            <iframe
-                              width="100%"
-                              height="200"
-                              src={ex.youtubeLink}
-                              title={ex.name}
-                              frameBorder="0"
-                              allowFullScreen
-                            ></iframe>
+                            <a
+                              href={ex.youtubeLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <img
+                                src={`https://img.youtube.com/vi/${
+                                  ex.youtubeLink.split("v=")[1]
+                                }/0.jpg`}
+                                alt={ex.name}
+                                className="youtube-thumb"
+                              />
+                            </a>
                           )}
 
                           <p>
@@ -121,6 +225,7 @@ function Dashboard() {
           );
         })}
 
+        {/* FEEDBACK MODAL */}
         {feedbackWeek && (
           <div className="feedback-modal">
             <form onSubmit={sendFeedback}>

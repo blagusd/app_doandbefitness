@@ -109,13 +109,47 @@ router.post(
  *       404:
  *         description: User not found
  */
-router.get("/:userId", authMiddleware, getUserPlans);
-router.get("/:userId/week/:weekNumber", authMiddleware, getUserPlanByWeek);
+//router.get("/:userId", authMiddleware, getUserPlans);
+//router.get("/:userId/week/:weekNumber", authMiddleware, getUserPlanByWeek);
 router.delete(
   "/:userId/week/:weekNumber",
   authMiddleware,
   requireRole("admin"),
   deletePlanByWeek
+);
+
+router.get("/:userId", authMiddleware, async (req, res, next) => {
+  try {
+    if (
+      req.user.id.toString() !== req.params.userId &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    return getUserPlans(req, res, next);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get(
+  "/:userId/week/:weekNumber",
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      if (
+        req.user.id.toString() !== req.params.userId &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      return getUserPlanByWeek(req, res, next);
+    } catch (err) {
+      next(err);
+    }
+  }
 );
 
 module.exports = router;

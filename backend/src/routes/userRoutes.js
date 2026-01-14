@@ -11,45 +11,89 @@ const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
  */
 
 /**
- * @swagger
- * /auth/users:
- *   get:
- *     summary: Get all registered users (admin only)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of all users
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                   email:
- *                     type: string
- *                   role:
- *                     type: string
- *       401:
- *         description: User not authorized
- *       403:
- *         description: Only admin can view users
+ * GET /auth/users
+ * Admin: get all users
  */
 router.get("/users", authMiddleware, requireRole("admin"), async (req, res) => {
   try {
     const users = await User.find().populate("weeklyPlans");
     res.json(users);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error while getting the users", error: err });
+    res.status(500).json({
+      message: "Error while getting the users",
+      error: err,
+    });
   }
 });
+
+/**
+ * GET /auth/user/:id
+ * Fetch single user (used by Dashboard)
+ */
+router.get("/user/:id", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (req.user.id.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      completedWeeks: user.completedWeeks || [],
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error fetching user",
+      error: err,
+    });
+  }
+});
+
+/**
+ * POST /auth/complete-week/:userId/:weekNumber
+ * Mark week completed
+ */
+router.post(
+  "/complete-week/:userId/:weekNumber",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { userId, weekNumber } = req.params;
+
+      if (req.user.id.toString() !== userId && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const week = Number(weekNumber);
+
+      if (!user.completedWeeks.includes(week)) {
+        user.completedWeeks.push(week);
+        await user.save();
+      }
+
+      res.json({
+        success: true,
+        completedWeeks: user.completedWeeks,
+      });
+    } catch (err) {
+      res.status(500).json({
+        message: "Error completing week",
+        error: err,
+      });
+    }
+  }
+);
 
 module.exports = router;

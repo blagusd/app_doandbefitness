@@ -21,11 +21,9 @@ function App() {
   const [showForgot, setShowForgot] = useState(false);
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
-
-  // NEW: role stored in state (not frozen from localStorage)
   const [role, setRole] = useState(localStorage.getItem("role"));
 
-  // Listen for storage changes (multi-tab sync)
+  // Sync login state across tabs
   useEffect(() => {
     const checkToken = () => {
       setIsLoggedIn(!!localStorage.getItem("token"));
@@ -39,12 +37,13 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
+    localStorage.removeItem("userId");
     setIsLoggedIn(false);
     setRole(null);
     window.location.href = "/";
   };
 
-  // NEW: dynamic dashboard selection
+  // Choose dashboard based on role
   const dashView = role === "admin" ? <AdminDashboard /> : <Dashboard />;
 
   return (
@@ -77,9 +76,13 @@ function App() {
           </div>
         </nav>
 
+        {/* ROUTES */}
         <Routes>
           <Route path="/" element={<LandingView />} />
           <Route path="/pricing" element={<PricingView />} />
+
+          {/* FIX: Add /login route so ProtectedRoute never crashes */}
+          <Route path="/login" element={<LandingView />} />
 
           {/* Protected dashboard */}
           <Route
@@ -91,9 +94,12 @@ function App() {
             path="/reset-password/:token"
             element={<ResetPasswordView />}
           />
+
+          {/* Catch-all fallback */}
+          <Route path="*" element={<LandingView />} />
         </Routes>
 
-        {/* Modals */}
+        {/* MODALS */}
         {showLogin && (
           <LoginModal
             onClose={() => setShowLogin(false)}
@@ -107,7 +113,7 @@ function App() {
             }}
             onLoginSuccess={() => {
               setIsLoggedIn(true);
-              setRole(localStorage.getItem("role")); // NEW
+              setRole(localStorage.getItem("role"));
             }}
           />
         )}

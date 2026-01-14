@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, default: "client" },
   createdAt: { type: Date, default: Date.now },
   weeklyPlans: [{ type: mongoose.Schema.Types.ObjectId, ref: "Plan" }],
+  completedWeeks: { type: [Number], default: [] },
   progressEntries: [
     {
       exerciseId: { type: mongoose.Schema.Types.ObjectId, ref: "Exercise" },

@@ -3,37 +3,28 @@ const User = require("../models/User");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Expected token at Authorization header
     const authHeader = req.headers.authorization;
-    console.log(
-      "authMiddleware invoked. Authorization header:",
-      req.headers.authorization
-    );
+    console.log("authMiddleware invoked. Authorization header:", authHeader);
     if (!authHeader)
       return res
         .status(401)
-        .json({ message: "🚧 Acces denied - no token available" });
-
+        .json({ message: "🚧 Access denied - no token available" });
     const token = authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ message: "☹️ Token is wrong" });
-
-    // Check token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("auth decoded:", decoded);
-    console.log("found user id:", user?._id?.toString());
-
     const user = await User.findById(decoded.id);
+    console.log("found user id:", user?._id?.toString());
     if (!user)
       return res.status(404).json({ message: "🕵️ User does not exist" });
-
     req.user = {
-      id: user._id,
+      id: user._id.toString(),
       email: user.email,
       role: user.role || decoded.role,
     };
-
-    next(); // continue on route
+    next();
   } catch (err) {
+    console.error("AUTH ERROR:", err);
     res.status(401).json({ message: "🔴 Invalid token" });
   }
 };

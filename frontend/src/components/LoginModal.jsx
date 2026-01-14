@@ -8,7 +8,7 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
     password: "",
   });
 
-  const navigate = useNavigate(); // navigate hook
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,6 +16,7 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
@@ -30,15 +31,26 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
 
       const result = await response.json();
 
-      // save token in localStorage
+      // Save token
       localStorage.setItem("token", result.token);
-      if (result.user && result.user.role) {
+
+      // Save role
+      if (result.user?.role) {
         localStorage.setItem("role", result.user.role);
       }
 
+      // Save userId (CRITICAL for Dashboard)
+      if (result.user?.id) {
+        localStorage.setItem("userId", result.user.id);
+      }
+
+      // Close modal
       onClose();
+
+      // Notify App.jsx
       onLoginSuccess();
-      // re-route to dashboard
+
+      // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
       alert("Error logging in: " + error.message);
@@ -49,6 +61,7 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <h2>Login</h2>
+
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -58,6 +71,7 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
             onChange={handleChange}
             required
           />
+
           <input
             type="password"
             name="password"
@@ -66,18 +80,22 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
             onChange={handleChange}
             required
           />
+
           <button type="submit" className="btn-primary">
             Login
           </button>
         </form>
+
         <div className="modal-links">
           <button className="link-btn" onClick={onRegister}>
             Register
           </button>
+
           <button className="link-btn" onClick={onForgot}>
             Password forgotten?
           </button>
         </div>
+
         <button className="close-btn" onClick={onClose}>
           ×
         </button>

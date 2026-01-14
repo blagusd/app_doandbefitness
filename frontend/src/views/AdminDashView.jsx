@@ -37,6 +37,14 @@ function AdminDashboard() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Error while getting exercises:", err);
+        setExerciseMap({});
+        return;
+      }
+
       const data = await res.json();
 
       const map = {};
@@ -50,9 +58,6 @@ function AdminDashboard() {
     }
   };
 
-  // -----------------------------
-  // INITIAL LOAD
-  // -----------------------------
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -61,10 +66,19 @@ function AdminDashboard() {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
+
+        if (!res.ok) {
+          const err = await res.json();
+          console.error("Error while getting the clients:", err);
+          setUsers([]);
+          return;
+        }
+
         const data = await res.json();
-        setUsers(data);
+        setUsers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error while getting the clients:", err);
+        setUsers([]);
       }
     };
 
