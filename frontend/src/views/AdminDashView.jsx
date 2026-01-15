@@ -205,7 +205,30 @@ function AdminDashboard() {
       return;
     }
 
-    alert("Plan uspješno spremljen!");
+    const savedPlan = await res.json();
+
+    const assignRes = await fetch(
+      "http://localhost:5000/api/weekly-plan/assign",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          userId: selectedUser._id,
+          planId: savedPlan._id,
+        }),
+      }
+    );
+
+    if (!assignRes.ok) {
+      const err = await assignRes.text();
+      alert("Plan spremljen, ali WeeklyPlan nije kreiran: " + err);
+      return;
+    }
+
+    alert("Plan uspješno spremljen i dodijeljen korisniku!");
   };
 
   // -----------------------------

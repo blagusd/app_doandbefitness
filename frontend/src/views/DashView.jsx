@@ -1,13 +1,33 @@
 import "./DashView.css";
+import WeightChart from "./WeightChart.jsx";
 import { useEffect, useState } from "react";
+
+const getEmbedUrl = (url) => {
+  if (!url) return "";
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return match ? `https://www.youtube.com/embed/${match[1]}` : "";
+};
 
 function Dashboard() {
   const userId = localStorage.getItem("userId");
 
-  const [plans, setPlans] = useState(null);
+  //const [plans, setPlans] = useState(null);
+  const [weeklyPlans, setWeeklyPlans] = useState([]);
+  const [userInput, setUserInput] = useState({});
   const [completedWeeks, setCompletedWeeks] = useState([]);
   const [expandedWeek, setExpandedWeek] = useState(null);
   const [feedbackWeek, setFeedbackWeek] = useState(null);
+  const [weightInput, setWeightInput] = useState("");
+  const [weightHistory, setWeightHistory] = useState([]);
+  const [progressPhotos, setProgressPhotos] = useState({});
+  const [previewPhotos, setPreviewPhotos] = useState({});
+  const [photoIndex, setPhotoIndex] = useState({
+    front: 0,
+    side: 0,
+    back: 0,
+  });
 
   // -----------------------------
   // FETCH PLANS + USER DATA
@@ -17,9 +37,9 @@ function Dashboard() {
 
     const fetchData = async () => {
       try {
-        // 1) Fetch plans
+        // 1) Fetch WEEKLY PLAN (not Plan!)
         const resPlans = await fetch(
-          `http://localhost:5000/api/plans/${userId}`,
+          `http://localhost:5000/api/weekly-plan/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -29,21 +49,15 @@ function Dashboard() {
 
         if (!resPlans.ok) {
           const text = await resPlans.text();
-          console.error("Plans fetch failed:", resPlans.status, text);
-          setPlans([]);
+          console.error("WeeklyPlan fetch failed:", resPlans.status, text);
+          setWeeklyPlans([]);
           return;
         }
 
-        const plansData = await resPlans.json();
+        const weeklyPlanData = await resPlans.json();
 
-        if (!Array.isArray(plansData)) {
-          console.error("Plans are not an array:", plansData);
-          setPlans([]);
-          return;
-        }
-
-        const sorted = plansData.sort((a, b) => a.weekNumber - b.weekNumber);
-        setPlans(sorted);
+        // WeeklyPlan is ONE object, not an array → wrap it
+        setWeeklyPlans([weeklyPlanData]);
 
         // 2) Fetch user (completedWeeks)
         const resUser = await fetch(
@@ -55,21 +69,31 @@ function Dashboard() {
           }
         );
 
-        if (!resUser.ok) {
-          const text = await resUser.text();
-          console.error("User fetch failed:", resUser.status, text);
-          setCompletedWeeks([]);
-        } else {
+        if (resUser.ok) {
           const userData = await resUser.json();
           setCompletedWeeks(userData.completedWeeks || []);
         }
 
-        // 3) Auto-open first unfinished week
-        const firstUnfinished =
-          sorted.find((p) => !completedWeeks.includes(p.weekNumber)) ||
-          sorted[0];
+        // 3) Fetch weight history
+        const resWeight = await fetch("http://localhost:5000/auth/weight", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (resWeight.ok) {
+          const data = await resWeight.json();
+          setWeightHistory(data.weightHistory || []);
+        }
 
-        setExpandedWeek(firstUnfinished?.weekNumber || null);
+        // 4) Fetch photos
+        const resPhotos = await fetch("http://localhost:5000/auth/photos", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (resPhotos.ok) {
+          const data = await resPhotos.json();
+          setProgressPhotos(data.progressPhotos || {});
+        }
+
+        // 5) Auto-open week
+        setExpandedWeek(weeklyPlanData.weekNumber);
       } catch (err) {
         console.error("Error loading dashboard:", err);
       }
@@ -146,18 +170,103 @@ function Dashboard() {
     }
   };
 
+  const handleWeightSubmit = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch("http://localhost:5000/auth/weight", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ weight: weightInput }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      setWeightHistory(data.weightHistory);
+      setWeightInput("");
+    }
+  };
+
+  const handlePhotoUpload = async (e, position) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewPhotos((prev) => ({ ...prev, [position]: reader.result }));
+    };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append(position, file);
+
+    const res = await fetch("http://localhost:5000/auth/photos", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: formData,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      setProgressPhotos(data.progressPhotos);
+    }
+  };
+
+  const scrollPhoto = (position, direction) => {
+    const photos = progressPhotos[position] || [];
+    const current = photoIndex[position];
+    const next =
+      direction === "left"
+        ? Math.max(current - 1, 0)
+        : Math.min(current + 1, photos.length - 1);
+
+    setPhotoIndex((prev) => ({ ...prev, [position]: next }));
+  };
+
+  const handleInput = (exerciseId, field, value) => {
+    setUserInput((prev) => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveExercise = async (planId, day, ex) => {
+    const data = userInput[ex._id];
+    if (!data) return;
+
+    await fetch("/api/weekly-plan/update-exercise", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        weeklyPlanId: planId,
+        day,
+        exerciseId: ex._id,
+        sets: data.actualSets,
+        reps: data.actualReps,
+        weight: data.actualWeight,
+      }),
+    });
+  };
+
   // -----------------------------
   // RENDER
   // -----------------------------
-  if (plans === null) return <p>Učitavanje...</p>;
-  if (plans.length === 0) return <p>Nema dostupnih planova.</p>;
+  if (weeklyPlans === null) return <p>Učitavanje...</p>;
+  if (weeklyPlans.length === 0) return <p>Nema dostupnih planova.</p>;
 
   return (
     <div className="dashboard">
       <main className="main-view">
         <h2>Tvoji tjedni planovi</h2>
 
-        {plans.map((plan) => {
+        {weeklyPlans.map((plan) => {
           const isExpanded = expandedWeek === plan.weekNumber;
           const isCompleted = completedWeeks.includes(plan.weekNumber);
 
@@ -178,7 +287,7 @@ function Dashboard() {
 
               {isExpanded && (
                 <div className="week-content">
-                  {plan.workouts.map((day, idx) => (
+                  {plan.days.map((day, idx) => (
                     <div key={idx} className="day-block">
                       <h3>{day.day}</h3>
 
@@ -186,26 +295,84 @@ function Dashboard() {
                         <div className="exercise" key={ex._id}>
                           <h4>{ex.name}</h4>
 
-                          {/* SAFE YOUTUBE PREVIEW */}
                           {ex.youtubeLink && (
-                            <a
-                              href={ex.youtubeLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <img
-                                src={`https://img.youtube.com/vi/${
-                                  ex.youtubeLink.split("v=")[1]
-                                }/0.jpg`}
-                                alt={ex.name}
-                                className="youtube-thumb"
-                              />
-                            </a>
+                            <iframe
+                              width="100%"
+                              height="200"
+                              src={getEmbedUrl(ex.youtubeLink)}
+                              title={ex.name}
+                              frameBorder="0"
+                              allowFullScreen
+                            ></iframe>
                           )}
 
                           <p>
-                            <strong>Bilješke trenera:</strong> {ex.notes || "—"}
+                            <strong>Bilješke trenera:</strong>{" "}
+                            {ex.trainerNotes || "—"}
                           </p>
+
+                          <div className="planned">
+                            <p>
+                              <strong>Planirano:</strong>
+                            </p>
+                            <p>Serije: {ex.plannedSets}</p>
+                            <p>Ponavljanja: {ex.plannedReps}</p>
+                            <p>Kilaža: {ex.plannedWeight} kg</p>
+                          </div>
+
+                          <div className="actual">
+                            <p>
+                              <strong>Odradio:</strong>
+                            </p>
+
+                            <input
+                              type="number"
+                              placeholder="Serije"
+                              value={userInput[ex._id]?.actualSets || ""}
+                              onChange={(e) =>
+                                handleInput(
+                                  ex._id,
+                                  "actualSets",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                            <input
+                              type="number"
+                              placeholder="Ponavljanja"
+                              value={userInput[ex._id]?.actualReps || ""}
+                              onChange={(e) =>
+                                handleInput(
+                                  ex._id,
+                                  "actualReps",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                            <input
+                              type="number"
+                              placeholder="Kilaža"
+                              value={userInput[ex._id]?.actualWeight || ""}
+                              onChange={(e) =>
+                                handleInput(
+                                  ex._id,
+                                  "actualWeight",
+                                  e.target.value
+                                )
+                              }
+                            />
+
+                            <button
+                              className="save-btn"
+                              onClick={() =>
+                                saveExercise(plan._id, day.day, ex)
+                              }
+                            >
+                              Spremi
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -245,6 +412,107 @@ function Dashboard() {
           </div>
         )}
       </main>
+
+      <aside className="progress-aside">
+        <h3>Praćenje napretka</h3>
+
+        <form onSubmit={handleWeightSubmit} className="weight-form">
+          <label>Trenutna kilaža (kg):</label>
+          <input
+            type="number"
+            value={weightInput}
+            onChange={(e) => setWeightInput(e.target.value)}
+            required
+          />
+          <button type="submit">Spremi</button>
+        </form>
+
+        <div className="chart-container">
+          <WeightChart data={weightHistory} />
+        </div>
+
+        <div className="photo-upload">
+          <h4>Fotografije napretka</h4>
+
+          <label>Sprijeda:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handlePhotoUpload(e, "front")}
+          />
+
+          <label>Bočno:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handlePhotoUpload(e, "side")}
+          />
+
+          <label>Straga:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handlePhotoUpload(e, "back")}
+          />
+
+          <div className="photo-preview">
+            {["front", "side", "back"].map((pos) => {
+              const photos = progressPhotos[pos] || [];
+              const currentIndex = photoIndex[pos];
+              const currentPhoto = photos[currentIndex];
+              const currentPhotoUrl = currentPhoto
+                ? currentPhoto.startsWith("http")
+                  ? currentPhoto
+                  : `http://localhost:5000${currentPhoto}`
+                : null;
+              console.log("POS:", pos, "PHOTOS:", photos);
+
+              return (
+                <div key={pos} className="photo-block">
+                  <strong>
+                    {pos === "front"
+                      ? "Sprijeda"
+                      : pos === "side"
+                      ? "Bočno"
+                      : "Straga"}
+                    :
+                  </strong>
+
+                  {currentPhotoUrl ? (
+                    <div className="photo-scroll">
+                      <button
+                        onClick={() => scrollPhoto(pos, "left")}
+                        disabled={currentIndex === 0}
+                      >
+                        ◀
+                      </button>
+
+                      <img
+                        src={currentPhotoUrl}
+                        alt={`${pos}-${currentIndex}`}
+                        className="progress-photo"
+                      />
+
+                      <button
+                        onClick={() => scrollPhoto(pos, "right")}
+                        disabled={currentIndex === photos.length - 1}
+                      >
+                        ▶
+                      </button>
+
+                      <div className="photo-counter">
+                        {currentIndex + 1} / {photos.length}
+                      </div>
+                    </div>
+                  ) : (
+                    <p>Nema spremljenih slika</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

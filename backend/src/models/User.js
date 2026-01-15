@@ -17,6 +17,17 @@ const userSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
     },
   ],
+  weightHistory: [
+    {
+      date: { type: Date, default: Date.now },
+      weight: Number,
+    },
+  ],
+  progressPhotos: {
+    front: [String],
+    side: [String],
+    back: [String],
+  },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
 });

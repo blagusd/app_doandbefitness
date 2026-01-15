@@ -11,7 +11,7 @@
 }
 
 .main-view {
-  width: 100%;
+  flex: 1;
   max-width: 900px;
 }
 
@@ -223,6 +223,71 @@
 
 .feedback-modal button[type="button"]:hover {
   background: #c0392b;
+}
+
+.weight-form input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.photo-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.photo-block img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.photo-scroll {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.photo-scroll img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.photo-scroll button {
+  background: #eee;
+  border: none;
+  padding: 6px 10px;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.photo-scroll button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dashboard-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.progress-aside {
+  width: 320px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-left: 1px solid #ddd;
+  border-radius: 8px;
+  position: sticky;
+  top: 20px;
 }
 
 /* ------------------------------

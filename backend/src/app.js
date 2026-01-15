@@ -8,12 +8,21 @@ const exerciseRoutes = require("./routes/exerciseRoutes");
 const planRoutes = require("./routes/planRoutes");
 const userRoutes = require("./routes/userRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
+const weeklyPlanRoutes = require("./routes/weeklyPlanRoutes");
 
 const errorHandler = require("./middleware/errorHandler");
 const securityMiddleware = require("./middleware/securityMiddleware");
 const { swaggerUi, specs } = require("./config/swagger");
 
 const app = express();
+app.use(
+  "/uploads",
+  express.static("uploads", {
+    setHeaders: (res) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    },
+  })
+);
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 securityMiddleware(app);
@@ -31,6 +40,7 @@ app.use("/api/exercises", exerciseRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/auth", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/weekly-plan", weeklyPlanRoutes);
 
 // Documentation
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
