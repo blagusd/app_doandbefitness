@@ -1,7 +1,7 @@
 const AppError = require("../utils/AppError");
 const User = require("../models/User");
 
-exports.addProgress = async (req, res) => {
+exports.addProgress = async (req, res, next) => {
   try {
     const userId = req.user.id; // from JWT
     const { exerciseId, sets, reps, weight } = req.body;
@@ -32,7 +32,7 @@ exports.addProgress = async (req, res) => {
   }
 };
 
-exports.getProgress = async (req, res) => {
+exports.getProgress = async (req, res, next) => {
   try {
     const userId = req.user.id; // from JWT
     const user = await User.findById(userId).populate(

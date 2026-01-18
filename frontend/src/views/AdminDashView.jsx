@@ -1,17 +1,34 @@
+import "./AdminDashView.css";
 import { useEffect, useState } from "react";
-import "../views/AdminDashView.css";
 
-const getEmbedUrl = (url) => {
-  if (!url) return "";
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match ? `https://www.youtube.com/embed/${match[1]}` : "";
-};
+// SERVICES
+import { fetchUsers, fetchUserPlans } from "../services/userService";
+import { fetchExercises, createExercise } from "../services/exerciseService";
+import {
+  fetchPlanForWeek,
+  savePlanService,
+  assignWeeklyPlan,
+  deletePlanService,
+} from "../services/planService";
+import { fetchWeightHistory, fetchPhotos } from "../services/progressService";
+
+// UTILS
+import {
+  addExerciseToDayUtil,
+  removeExerciseFromDayUtil,
+} from "../utils/dayUtils";
+import { getEmbedUrl } from "../utils/youtube";
+
+// COMPONENTS
+import AdminProgressAside from "../components/AdminProgressAside";
 
 function AdminDashboard() {
+  // -----------------------------
+  // STATE
+  // -----------------------------
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+
   const [weekNumber, setWeekNumber] = useState(1);
   const [weekDays, setWeekDays] = useState([]);
   const [exerciseMap, setExerciseMap] = useState({});
@@ -27,120 +44,108 @@ function AdminDashboard() {
     weight: "",
   });
 
-  // -----------------------------
-  // FETCH EXERCISES
-  // -----------------------------
-  const fetchExercises = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/exercises", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+  // READ‑ONLY PROGRESS ASIDE
+  const [weightHistory, setWeightHistory] = useState([]);
+  const [progressPhotos, setProgressPhotos] = useState({});
+  const [photoIndex, setPhotoIndex] = useState({
+    front: 0,
+    side: 0,
+    back: 0,
+  });
 
-      if (!res.ok) {
-        const err = await res.json();
-        console.error("Error while getting exercises:", err);
-        setExerciseMap({});
-        return;
-      }
+  const scrollPhoto = (position, direction) => {
+    const photos = progressPhotos[position] || [];
+    const current = photoIndex[position];
+    const next =
+      direction === "left"
+        ? Math.max(current - 1, 0)
+        : Math.min(current + 1, photos.length - 1);
 
-      const data = await res.json();
-
-      const map = {};
-      data.forEach((ex) => {
-        map[ex._id] = ex;
-      });
-
-      setExerciseMap(map);
-    } catch (err) {
-      console.error("Error while getting exercises:", err);
-    }
+    setPhotoIndex((prev) => ({ ...prev, [position]: next }));
   };
 
+  // -----------------------------
+  // LOAD USERS + EXERCISES + PROGRESS
+  // -----------------------------
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/auth/users", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+    const load = async () => {
+      // USERS
+      const usersData = await fetchUsers();
+      setUsers(Array.isArray(usersData) ? usersData : []);
 
-        if (!res.ok) {
-          const err = await res.json();
-          console.error("Error while getting the clients:", err);
-          setUsers([]);
-          return;
-        }
+      // EXERCISES
+      const exercises = await fetchExercises();
+      const map = {};
+      exercises.forEach((ex) => (map[ex._id] = ex));
+      setExerciseMap(map);
 
-        const data = await res.json();
-        setUsers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error while getting the clients:", err);
-        setUsers([]);
-      }
+      // PROGRESS
+      const weight = await fetchWeightHistory();
+      setWeightHistory(weight.weightHistory || []);
+
+      const photos = await fetchPhotos();
+      setProgressPhotos(photos.progressPhotos || {});
     };
 
-    fetchUsers();
-    fetchExercises();
+    load();
   }, []);
 
   // -----------------------------
-  // FETCH PLAN WHEN USER OR WEEK CHANGES
+  // LOAD PLAN WHEN USER OR WEEK CHANGES
   // -----------------------------
   useEffect(() => {
     if (!selectedUser) return;
 
-    const fetchPlan = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/plans/${selectedUser._id}/week/${weekNumber}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+    const loadPlan = async () => {
+      const res = await fetchPlanForWeek(selectedUser._id, weekNumber);
 
-        if (res.status === 404) {
-          const numDays = selectedUser.planDays || 3;
-          const days = Array.from({ length: numDays }, (_, i) => ({
-            day: `Dan ${i + 1}`,
-            exercises: [],
-          }));
-          setWeekDays(days);
-          return;
-        }
-
-        const plan = await res.json();
-        setWeekDays(plan.workouts);
-      } catch (err) {
-        console.error("Greška pri dohvaćanju plana:", err);
+      if (res.status === 404) {
+        const numDays = selectedUser.planDays || 3;
+        const days = Array.from({ length: numDays }, (_, i) => ({
+          day: `Dan ${i + 1}`,
+          exercises: [],
+        }));
+        setWeekDays(days);
+        return;
       }
+
+      const plan = await res.json();
+      setWeekDays(plan.workouts);
     };
 
-    fetchPlan();
+    loadPlan();
   }, [selectedUser, weekNumber]);
+
+  // -----------------------------
+  // SELECT USER
+  // -----------------------------
+  const handleUserSelect = async (user) => {
+    setSelectedUser(user);
+    setWeekNumber(1);
+
+    const plans = await fetchUserPlans(user._id);
+    setUserPlans(Array.isArray(plans) ? plans : []);
+
+    const weight = await fetchWeightHistory(user._id);
+    setWeightHistory(weight.weightHistory || []);
+
+    const photos = await fetchPhotos(user._id);
+    setProgressPhotos(photos.progressPhotos || {});
+
+    console.log("Photos for user:", user.fullName, photos.progressPhotos);
+  };
 
   // -----------------------------
   // CREATE EXERCISE
   // -----------------------------
-  const createExercise = async () => {
-    const res = await fetch("http://localhost:5000/api/exercises", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(exerciseForm),
-    });
+  const handleCreateExercise = async () => {
+    const newExercise = await createExercise(exerciseForm);
 
-    const newExercise = await res.json();
-
-    // Refresh exercise map
-    await fetchExercises();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // refresh exercise map
+    const exercises = await fetchExercises();
+    const map = {};
+    exercises.forEach((ex) => (map[ex._id] = ex));
+    setExerciseMap(map);
 
     return newExercise._id;
   };
@@ -151,10 +156,9 @@ function AdminDashboard() {
   const addExerciseToDay = async (dayIndex) => {
     if (!exerciseForm.name) return;
 
-    const exerciseId = await createExercise();
+    const exerciseId = await handleCreateExercise();
 
-    const updated = [...weekDays];
-    updated[dayIndex].exercises.push(exerciseId);
+    const updated = addExerciseToDayUtil(weekDays, dayIndex, exerciseId);
     setWeekDays(updated);
 
     setExerciseForm({
@@ -172,13 +176,12 @@ function AdminDashboard() {
   // REMOVE EXERCISE
   // -----------------------------
   const removeExerciseFromDay = (dayIndex, exIndex) => {
-    const updated = [...weekDays];
-    updated[dayIndex].exercises.splice(exIndex, 1);
+    const updated = removeExerciseFromDayUtil(weekDays, dayIndex, exIndex);
     setWeekDays(updated);
   };
 
   // -----------------------------
-  // SAVE PLAN
+  // SAVE PLAN + ASSIGN WEEKLYPLAN
   // -----------------------------
   const savePlan = async () => {
     if (!selectedUser) return;
@@ -190,41 +193,12 @@ function AdminDashboard() {
       workouts: weekDays,
     };
 
-    const res = await fetch("http://localhost:5000/api/plans", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const savedPlan = await savePlanService(payload);
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert("Greška pri spremanju plana: " + err.message);
-      return;
-    }
-
-    const savedPlan = await res.json();
-
-    const assignRes = await fetch(
-      "http://localhost:5000/api/weekly-plan/assign",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          userId: selectedUser._id,
-          planId: savedPlan._id,
-        }),
-      }
-    );
+    const assignRes = await assignWeeklyPlan(selectedUser._id, savedPlan._id);
 
     if (!assignRes.ok) {
-      const err = await assignRes.text();
-      alert("Plan spremljen, ali WeeklyPlan nije kreiran: " + err);
+      alert("Plan spremljen, ali WeeklyPlan nije kreiran.");
       return;
     }
 
@@ -232,25 +206,18 @@ function AdminDashboard() {
   };
 
   // -----------------------------
-  // SELECT USER
+  // DELETE PLAN
   // -----------------------------
-  const handleUserSelect = async (user) => {
-    setSelectedUser(user);
-    setWeekNumber(1);
+  const deletePlan = async () => {
+    if (!selectedUser) return;
 
-    await fetchExercises();
-
-    const res = await fetch(`http://localhost:5000/api/plans/${user._id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    const res = await deletePlanService(selectedUser._id, weekNumber);
 
     if (res.ok) {
-      const plans = await res.json();
-      setUserPlans(plans);
+      alert("Plan obrisan");
+      setWeekDays([]);
     } else {
-      setUserPlans([]);
+      alert("Plan nije pronađen");
     }
   };
 
@@ -259,6 +226,7 @@ function AdminDashboard() {
   // -----------------------------
   return (
     <div className="admin-dashboard">
+      {/* SIDEBAR */}
       <aside className="sidebar">
         <h3>Korisnici</h3>
         <ul>
@@ -274,17 +242,20 @@ function AdminDashboard() {
         </ul>
       </aside>
 
+      {/* MAIN */}
       <main className="main-view">
         {!selectedUser ? (
           <p>Odaberi korisnika s lijeve strane.</p>
         ) : (
           <>
+            {/* USER SUMMARY */}
             <section className="client-summary">
               <h2>{selectedUser.fullName}</h2>
               <p>Email: {selectedUser.email}</p>
               <p>Planova: {userPlans.length}</p>
             </section>
 
+            {/* WEEK BUILDER */}
             <section className="week-builder">
               <h3>Tjedni plan za {selectedUser.fullName}</h3>
 
@@ -319,6 +290,7 @@ function AdminDashboard() {
                 </button>
               </label>
 
+              {/* DAYS */}
               <div className="week-days">
                 {weekDays.map((day, idx) => (
                   <div key={idx} className="day-card">
@@ -389,6 +361,7 @@ function AdminDashboard() {
                       </ul>
                     )}
 
+                    {/* ADD EXERCISE FORM */}
                     <div className="exercise-form">
                       <input
                         type="text"
@@ -475,41 +448,26 @@ function AdminDashboard() {
                 ))}
               </div>
 
+              {/* SAVE / DELETE */}
               <button className="save-plan-btn" onClick={savePlan}>
                 Spremi plan
               </button>
 
-              <button
-                className="delete-plan-btn"
-                onClick={async () => {
-                  if (!selectedUser) return;
-
-                  const res = await fetch(
-                    `http://localhost:5000/api/plans/${selectedUser._id}/week/${weekNumber}`,
-                    {
-                      method: "DELETE",
-                      headers: {
-                        Authorization: `Bearer ${localStorage.getItem(
-                          "token"
-                        )}`,
-                      },
-                    }
-                  );
-
-                  if (res.ok) {
-                    alert("Plan obrisan");
-                    setWeekDays([]);
-                  } else {
-                    alert("Plan nije pronađen");
-                  }
-                }}
-              >
+              <button className="delete-plan-btn" onClick={deletePlan}>
                 Obriši ovaj tjedan
               </button>
             </section>
           </>
         )}
       </main>
+
+      {/* RIGHT ASIDE */}
+      <AdminProgressAside
+        weightHistory={weightHistory}
+        progressPhotos={progressPhotos}
+        photoIndex={photoIndex}
+        scrollPhoto={scrollPhoto}
+      />
     </div>
   );
 }

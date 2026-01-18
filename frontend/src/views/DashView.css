@@ -290,6 +290,23 @@
   top: 20px;
 }
 
+.day-header {
+  background: #f4f4f4;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.day-content {
+  padding: 10px 15px;
+  border-left: 3px solid #ddd;
+  margin-bottom: 10px;
+}
+
 /* ------------------------------
    RESPONSIVE
 ------------------------------ */

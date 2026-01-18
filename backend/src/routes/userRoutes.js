@@ -190,4 +190,38 @@ router.get("/photos", authMiddleware, async (req, res) => {
   }
 });
 
+router.get(
+  "/weight/:userId",
+  authMiddleware,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.params.userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      res.json({ weightHistory: user.weightHistory || [] });
+    } catch (err) {
+      res
+        .status(500)
+        .json({ message: "Error fetching weight history", error: err });
+    }
+  }
+);
+
+router.get(
+  "/photos/:userId",
+  authMiddleware,
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.params.userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      res.json({ progressPhotos: user.progressPhotos || {} });
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching photos", error: err });
+    }
+  }
+);
+
 module.exports = router;

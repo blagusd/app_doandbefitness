@@ -1,26 +1,34 @@
 import "./DashView.css";
 import WeightChart from "./WeightChart.jsx";
 import { useEffect, useState } from "react";
+import UserProgressAside from "../components/UserProgressAside.jsx";
+import "../styles/progressAside.css";
 
-const getEmbedUrl = (url) => {
-  if (!url) return "";
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match ? `https://www.youtube.com/embed/${match[1]}` : "";
-};
+// SERVICES
+import { fetchWeeklyPlan, saveExercise } from "../services/weeklyPlanService";
+import { fetchUser } from "../services/userService";
+import { fetchWeightHistory, saveWeight } from "../services/weightService";
+import { fetchPhotos, uploadPhoto } from "../services/photoService";
+import { sendFeedbackEmail, completeWeek } from "../services/feedbackService";
+
+// UTILS
+import { getEmbedUrl } from "../utils/youtube";
+import { toggleDayState } from "../utils/dayUtils.jsx";
 
 function Dashboard() {
   const userId = localStorage.getItem("userId");
 
-  //const [plans, setPlans] = useState(null);
+  // STATE
   const [weeklyPlans, setWeeklyPlans] = useState([]);
   const [userInput, setUserInput] = useState({});
   const [completedWeeks, setCompletedWeeks] = useState([]);
   const [expandedWeek, setExpandedWeek] = useState(null);
+  const [expandedDays, setExpandedDays] = useState({});
   const [feedbackWeek, setFeedbackWeek] = useState(null);
+
   const [weightInput, setWeightInput] = useState("");
   const [weightHistory, setWeightHistory] = useState([]);
+
   const [progressPhotos, setProgressPhotos] = useState({});
   const [previewPhotos, setPreviewPhotos] = useState({});
   const [photoIndex, setPhotoIndex] = useState({
@@ -30,158 +38,70 @@ function Dashboard() {
   });
 
   // -----------------------------
-  // FETCH PLANS + USER DATA
+  // FETCH ALL USER DATA
   // -----------------------------
   useEffect(() => {
     if (!userId) return;
 
-    const fetchData = async () => {
-      try {
-        // 1) Fetch WEEKLY PLAN (not Plan!)
-        const resPlans = await fetch(
-          `http://localhost:5000/api/weekly-plan/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+    const load = async () => {
+      const weeklyPlan = await fetchWeeklyPlan(userId);
+      setWeeklyPlans([weeklyPlan]);
 
-        if (!resPlans.ok) {
-          const text = await resPlans.text();
-          console.error("WeeklyPlan fetch failed:", resPlans.status, text);
-          setWeeklyPlans([]);
-          return;
-        }
+      const user = await fetchUser(userId);
+      setCompletedWeeks(user.completedWeeks || []);
 
-        const weeklyPlanData = await resPlans.json();
+      const weight = await fetchWeightHistory();
+      setWeightHistory(weight.weightHistory || []);
 
-        // WeeklyPlan is ONE object, not an array → wrap it
-        setWeeklyPlans([weeklyPlanData]);
+      const photos = await fetchPhotos();
+      setProgressPhotos(photos.progressPhotos || {});
 
-        // 2) Fetch user (completedWeeks)
-        const resUser = await fetch(
-          `http://localhost:5000/auth/user/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        if (resUser.ok) {
-          const userData = await resUser.json();
-          setCompletedWeeks(userData.completedWeeks || []);
-        }
-
-        // 3) Fetch weight history
-        const resWeight = await fetch("http://localhost:5000/auth/weight", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        if (resWeight.ok) {
-          const data = await resWeight.json();
-          setWeightHistory(data.weightHistory || []);
-        }
-
-        // 4) Fetch photos
-        const resPhotos = await fetch("http://localhost:5000/auth/photos", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        if (resPhotos.ok) {
-          const data = await resPhotos.json();
-          setProgressPhotos(data.progressPhotos || {});
-        }
-
-        // 5) Auto-open week
-        setExpandedWeek(weeklyPlanData.weekNumber);
-      } catch (err) {
-        console.error("Error loading dashboard:", err);
-      }
+      setExpandedWeek(weeklyPlan.weekNumber);
     };
 
-    fetchData();
+    load();
   }, [userId]);
 
   // -----------------------------
-  // TOGGLE WEEK
+  // DAY TOGGLE
   // -----------------------------
-  const toggleWeek = (week) => {
-    setExpandedWeek(expandedWeek === week ? null : week);
+  const toggleDay = (dayName) => {
+    setExpandedDays((prev) => toggleDayState(prev, dayName));
   };
 
   // -----------------------------
-  // OPEN FEEDBACK MODAL
+  // SAVE EXERCISE
   // -----------------------------
-  const markWeekCompleted = (week) => {
-    setFeedbackWeek(week);
+  const saveExerciseHandler = async (planId, day, ex) => {
+    const data = userInput[ex._id];
+    if (!data) return;
+
+    await saveExercise(planId, day, ex._id, data);
   };
 
   // -----------------------------
-  // SEND FEEDBACK + MARK WEEK DONE
+  // FEEDBACK + COMPLETE WEEK
   // -----------------------------
   const sendFeedback = async (e) => {
     e.preventDefault();
-
     const feedback = e.target.feedback.value;
 
-    try {
-      // 1) Send feedback email
-      const resFeedback = await fetch(
-        "http://localhost:5000/api/feedback/send",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            week: feedbackWeek,
-            feedback,
-          }),
-        }
-      );
+    await sendFeedbackEmail(feedbackWeek, feedback);
 
-      if (!resFeedback.ok) {
-        const text = await resFeedback.text();
-        console.error("Feedback send failed:", text);
-      }
+    const res = await completeWeek(userId, feedbackWeek);
+    const data = await res.json();
+    setCompletedWeeks(data.completedWeeks);
 
-      // 2) Mark week completed
-      const res = await fetch(
-        `http://localhost:5000/auth/complete-week/${userId}/${feedbackWeek}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Complete week failed:", text);
-        return;
-      }
-
-      const data = await res.json();
-      setCompletedWeeks(data.completedWeeks);
-
-      // 3) Close modal
-      setFeedbackWeek(null);
-    } catch (err) {
-      console.error("Error sending feedback:", err);
-    }
+    setFeedbackWeek(null);
   };
 
+  // -----------------------------
+  // WEIGHT SUBMIT
+  // -----------------------------
   const handleWeightSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/auth/weight", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ weight: weightInput }),
-    });
-
+    const res = await saveWeight(weightInput);
     if (res.ok) {
       const data = await res.json();
       setWeightHistory(data.weightHistory);
@@ -189,6 +109,9 @@ function Dashboard() {
     }
   };
 
+  // -----------------------------
+  // PHOTO UPLOAD
+  // -----------------------------
   const handlePhotoUpload = async (e, position) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -202,14 +125,7 @@ function Dashboard() {
     const formData = new FormData();
     formData.append(position, file);
 
-    const res = await fetch("http://localhost:5000/auth/photos", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: formData,
-    });
-
+    const res = await uploadPhoto(formData);
     if (res.ok) {
       const data = await res.json();
       setProgressPhotos(data.progressPhotos);
@@ -225,34 +141,6 @@ function Dashboard() {
         : Math.min(current + 1, photos.length - 1);
 
     setPhotoIndex((prev) => ({ ...prev, [position]: next }));
-  };
-
-  const handleInput = (exerciseId, field, value) => {
-    setUserInput((prev) => ({
-      ...prev,
-      [exerciseId]: {
-        ...prev[exerciseId],
-        [field]: value,
-      },
-    }));
-  };
-
-  const saveExercise = async (planId, day, ex) => {
-    const data = userInput[ex._id];
-    if (!data) return;
-
-    await fetch("/api/weekly-plan/update-exercise", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        weeklyPlanId: planId,
-        day,
-        exerciseId: ex._id,
-        sets: data.actualSets,
-        reps: data.actualReps,
-        weight: data.actualWeight,
-      }),
-    });
   };
 
   // -----------------------------
@@ -272,116 +160,139 @@ function Dashboard() {
 
           return (
             <div className="week-block" key={plan._id}>
+              {/* WEEK HEADER */}
               <div
                 className="week-header"
-                onClick={() => toggleWeek(plan.weekNumber)}
+                onClick={() =>
+                  setExpandedWeek(isExpanded ? null : plan.weekNumber)
+                }
               >
                 <span>Tjedan {plan.weekNumber}</span>
-
-                {isCompleted ? (
-                  <span className="checkmark">✔</span>
-                ) : (
-                  <span className="arrow">{isExpanded ? "▲" : "▼"}</span>
-                )}
+                <span className="arrow">{isExpanded ? "▲" : "▼"}</span>
               </div>
 
+              {/* WEEK CONTENT */}
               {isExpanded && (
                 <div className="week-content">
-                  {plan.days.map((day, idx) => (
-                    <div key={idx} className="day-block">
-                      <h3>{day.day}</h3>
+                  {plan.days.map((day, idx) => {
+                    const isDayOpen = expandedDays[day.day];
 
-                      {day.exercises.map((ex) => (
-                        <div className="exercise" key={ex._id}>
-                          <h4>{ex.name}</h4>
-
-                          {ex.youtubeLink && (
-                            <iframe
-                              width="100%"
-                              height="200"
-                              src={getEmbedUrl(ex.youtubeLink)}
-                              title={ex.name}
-                              frameBorder="0"
-                              allowFullScreen
-                            ></iframe>
-                          )}
-
-                          <p>
-                            <strong>Bilješke trenera:</strong>{" "}
-                            {ex.trainerNotes || "—"}
-                          </p>
-
-                          <div className="planned">
-                            <p>
-                              <strong>Planirano:</strong>
-                            </p>
-                            <p>Serije: {ex.plannedSets}</p>
-                            <p>Ponavljanja: {ex.plannedReps}</p>
-                            <p>Kilaža: {ex.plannedWeight} kg</p>
-                          </div>
-
-                          <div className="actual">
-                            <p>
-                              <strong>Odradio:</strong>
-                            </p>
-
-                            <input
-                              type="number"
-                              placeholder="Serije"
-                              value={userInput[ex._id]?.actualSets || ""}
-                              onChange={(e) =>
-                                handleInput(
-                                  ex._id,
-                                  "actualSets",
-                                  e.target.value
-                                )
-                              }
-                            />
-
-                            <input
-                              type="number"
-                              placeholder="Ponavljanja"
-                              value={userInput[ex._id]?.actualReps || ""}
-                              onChange={(e) =>
-                                handleInput(
-                                  ex._id,
-                                  "actualReps",
-                                  e.target.value
-                                )
-                              }
-                            />
-
-                            <input
-                              type="number"
-                              placeholder="Kilaža"
-                              value={userInput[ex._id]?.actualWeight || ""}
-                              onChange={(e) =>
-                                handleInput(
-                                  ex._id,
-                                  "actualWeight",
-                                  e.target.value
-                                )
-                              }
-                            />
-
-                            <button
-                              className="save-btn"
-                              onClick={() =>
-                                saveExercise(plan._id, day.day, ex)
-                              }
-                            >
-                              Spremi
-                            </button>
-                          </div>
+                    return (
+                      <div key={idx} className="day-block">
+                        {/* DAY HEADER */}
+                        <div
+                          className="day-header"
+                          onClick={() => toggleDay(day.day)}
+                        >
+                          <span>{day.day}</span>
+                          <span className="arrow">{isDayOpen ? "▲" : "▼"}</span>
                         </div>
-                      ))}
-                    </div>
-                  ))}
+
+                        {/* DAY CONTENT */}
+                        {isDayOpen && (
+                          <div className="day-content">
+                            {day.exercises.map((ex) => (
+                              <div className="exercise" key={ex._id}>
+                                <h4>{ex.name}</h4>
+
+                                {ex.youtubeLink && (
+                                  <iframe
+                                    width="100%"
+                                    height="200"
+                                    src={getEmbedUrl(ex.youtubeLink)}
+                                    title={ex.name}
+                                    frameBorder="0"
+                                    allowFullScreen
+                                  ></iframe>
+                                )}
+
+                                <p>
+                                  <strong>Bilješke trenera:</strong>{" "}
+                                  {ex.trainerNotes || "—"}
+                                </p>
+
+                                <div className="planned">
+                                  <p>
+                                    <strong>Planirano:</strong>
+                                  </p>
+                                  <p>Serije: {ex.plannedSets}</p>
+                                  <p>Ponavljanja: {ex.plannedReps}</p>
+                                  <p>Kilaža: {ex.plannedWeight} kg</p>
+                                </div>
+
+                                <div className="actual">
+                                  <p>
+                                    <strong>Odrađeno:</strong>
+                                  </p>
+
+                                  <input
+                                    type="number"
+                                    placeholder="Serije"
+                                    value={userInput[ex._id]?.actualSets || ""}
+                                    onChange={(e) =>
+                                      setUserInput((prev) => ({
+                                        ...prev,
+                                        [ex._id]: {
+                                          ...prev[ex._id],
+                                          actualSets: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                  />
+
+                                  <input
+                                    type="number"
+                                    placeholder="Ponavljanja"
+                                    value={userInput[ex._id]?.actualReps || ""}
+                                    onChange={(e) =>
+                                      setUserInput((prev) => ({
+                                        ...prev,
+                                        [ex._id]: {
+                                          ...prev[ex._id],
+                                          actualReps: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                  />
+
+                                  <input
+                                    type="number"
+                                    placeholder="Kilaža"
+                                    value={
+                                      userInput[ex._id]?.actualWeight || ""
+                                    }
+                                    onChange={(e) =>
+                                      setUserInput((prev) => ({
+                                        ...prev,
+                                        [ex._id]: {
+                                          ...prev[ex._id],
+                                          actualWeight: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                  />
+
+                                  <button
+                                    className="save-btn"
+                                    onClick={() =>
+                                      saveExerciseHandler(plan._id, day.day, ex)
+                                    }
+                                  >
+                                    Spremi
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
 
                   {!isCompleted && (
                     <button
                       className="finish-week-btn"
-                      onClick={() => markWeekCompleted(plan.weekNumber)}
+                      onClick={() => setFeedbackWeek(plan.weekNumber)}
                     >
                       Tjedan završen
                     </button>
@@ -413,106 +324,16 @@ function Dashboard() {
         )}
       </main>
 
-      <aside className="progress-aside">
-        <h3>Praćenje napretka</h3>
-
-        <form onSubmit={handleWeightSubmit} className="weight-form">
-          <label>Trenutna kilaža (kg):</label>
-          <input
-            type="number"
-            value={weightInput}
-            onChange={(e) => setWeightInput(e.target.value)}
-            required
-          />
-          <button type="submit">Spremi</button>
-        </form>
-
-        <div className="chart-container">
-          <WeightChart data={weightHistory} />
-        </div>
-
-        <div className="photo-upload">
-          <h4>Fotografije napretka</h4>
-
-          <label>Sprijeda:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handlePhotoUpload(e, "front")}
-          />
-
-          <label>Bočno:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handlePhotoUpload(e, "side")}
-          />
-
-          <label>Straga:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handlePhotoUpload(e, "back")}
-          />
-
-          <div className="photo-preview">
-            {["front", "side", "back"].map((pos) => {
-              const photos = progressPhotos[pos] || [];
-              const currentIndex = photoIndex[pos];
-              const currentPhoto = photos[currentIndex];
-              const currentPhotoUrl = currentPhoto
-                ? currentPhoto.startsWith("http")
-                  ? currentPhoto
-                  : `http://localhost:5000${currentPhoto}`
-                : null;
-              console.log("POS:", pos, "PHOTOS:", photos);
-
-              return (
-                <div key={pos} className="photo-block">
-                  <strong>
-                    {pos === "front"
-                      ? "Sprijeda"
-                      : pos === "side"
-                      ? "Bočno"
-                      : "Straga"}
-                    :
-                  </strong>
-
-                  {currentPhotoUrl ? (
-                    <div className="photo-scroll">
-                      <button
-                        onClick={() => scrollPhoto(pos, "left")}
-                        disabled={currentIndex === 0}
-                      >
-                        ◀
-                      </button>
-
-                      <img
-                        src={currentPhotoUrl}
-                        alt={`${pos}-${currentIndex}`}
-                        className="progress-photo"
-                      />
-
-                      <button
-                        onClick={() => scrollPhoto(pos, "right")}
-                        disabled={currentIndex === photos.length - 1}
-                      >
-                        ▶
-                      </button>
-
-                      <div className="photo-counter">
-                        {currentIndex + 1} / {photos.length}
-                      </div>
-                    </div>
-                  ) : (
-                    <p>Nema spremljenih slika</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </aside>
+      <UserProgressAside
+        weightInput={weightInput}
+        setWeightInput={setWeightInput}
+        weightHistory={weightHistory}
+        handleWeightSubmit={handleWeightSubmit}
+        progressPhotos={progressPhotos}
+        handlePhotoUpload={handlePhotoUpload}
+        scrollPhoto={scrollPhoto}
+        photoIndex={photoIndex}
+      />
     </div>
   );
 }
