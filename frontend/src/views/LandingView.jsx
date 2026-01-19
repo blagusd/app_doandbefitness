@@ -1,14 +1,12 @@
 import "./LandingView.css";
-import gymImg1 from "../assets/gym1.jpg";
+//import gymImg1 from "../assets/gym1.jpg";
+import doroteaNaslovna from "../assets/dorotea-naslovna.png";
 import gymImg2 from "../assets/gym2.jpeg";
 
 function LandingView() {
   return (
     <main className="landing">
       <section className="row">
-        <div className="col image">
-          <img src={gymImg1} alt="Trening" />
-        </div>
         <div className="col text wide">
           <h3 className="highlight">Umorni od bolova u leđima i zglobovima?</h3>
           <p className="accent">
@@ -18,12 +16,12 @@ function LandingView() {
             Potrebna je motivacija i jasan plan treninga kako bi se pokrenuli i
             održali formu?
           </p>
-          <p className="accent">Želite poraditi na držanju!</p>
-          <p className="accent">Što je sa zdravljem i prehranom?</p>
-
+          <p className="accent">
+            Želite unaprijediti svoje zdravlje i prehranu?
+          </p>
           <p className="story">
-            <strong>Ja Vam mogu pomoć.</strong> Svi ovi izazovi su mi dobro
-            poznati i najviše sam učila kroz vlastito iskustvo.{" "}
+            <strong>Ja Vam mogu pomoć.</strong> Svi ovi izazovi su vrlo dobro
+            poznati. Najviše sam ipak učila kroz vlastito iskustvo.{" "}
           </p>
           <p className="story">
             Svakoga očekuje <span className="emphasis">individualni plan</span>,
@@ -33,11 +31,8 @@ function LandingView() {
             </span>
           </p>
         </div>
-      </section>
-
-      <section className="row reverse">
         <div className="col image">
-          <img src={gymImg2} alt="Online platforma" />
+          <img src={doroteaNaslovna} alt="Dorotea" />
         </div>
         <div className="col text wide">
           <div className="col text wide">
@@ -79,36 +74,6 @@ function LandingView() {
         </div>
       </section>
 
-      <section className="reviews">
-        <h3>Što kažu naši korisnici</h3>
-        <div className="review-grid">
-          <div className="review-card">
-            <div className="avatar">D</div>
-            <blockquote>
-              “Dorotea mi je pomogla da napokon pronađem rutinu koja mi
-              odgovara.”
-            </blockquote>
-            <p className="author">Ana K.</p>
-          </div>
-
-          <div className="review-card">
-            <div className="avatar">M</div>
-            <blockquote>
-              “Planovi su jasni, motivacija ogromna — osjećam se bolje nego
-              ikad.”
-            </blockquote>
-            <p className="author">Marko P.</p>
-          </div>
-
-          <div className="review-card">
-            <div className="avatar">L</div>
-            <blockquote>
-              “Najbolja odluka bila je krenuti s Do&BEFitness. Rezultati su tu!”
-            </blockquote>
-            <p className="author">Lucija R.</p>
-          </div>
-        </div>
-      </section>
       <p className="note">
         Treninzi su osmišljeni za izvođenje u teretani, a ukoliko se pokaže veći
         interes, napravit ćemo program i za kućne treninge.
