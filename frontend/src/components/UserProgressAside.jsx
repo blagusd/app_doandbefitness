@@ -12,7 +12,7 @@ function UserProgressAside({
   photoIndex,
 }) {
   return (
-    <aside className="progress-aside">
+    <aside className="progress-aside uniform-width">
       <h3>Praćenje napretka</h3>
 
       {/* WEIGHT */}
@@ -73,8 +73,8 @@ function UserProgressAside({
                   {pos === "front"
                     ? "Sprijeda"
                     : pos === "side"
-                    ? "Bočno"
-                    : "Straga"}
+                      ? "Bočno"
+                      : "Straga"}
                   :
                 </strong>
 

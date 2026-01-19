@@ -8,6 +8,8 @@
   padding: 40px 20px;
   background: #f7f7f7;
   min-height: 100vh;
+  align-items: flex-start;
+  gap: 30px;
 }
 
 .main-view {
@@ -307,20 +309,110 @@
   margin-bottom: 10px;
 }
 
+.aside-dropdown {
+  display: block;
+}
+
 /* ------------------------------
    RESPONSIVE
 ------------------------------ */
 
-@media (max-width: 600px) {
-  .week-header {
-    font-size: 18px;
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+    padding: 20px 15px;
+    gap: 20px;
+    min-height: auto;
   }
 
-  .exercise h4 {
-    font-size: 16px;
+  .main-view {
+    max-width: 100%;
+    width: 100%;
+    flex: none;
+    margin: 0;
+  }
+
+  .video-aside,
+  .progress-aside {
+    width: 100%;
+    position: static;
+    border-radius: 6px;
+    box-shadow: none;
+    padding: 15px;
+  }
+
+  .video-aside h3,
+  .progress-aside h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .exercise-buttons button {
+    font-size: 1rem;
+    padding: 12px;
   }
 
   .finish-week-btn {
     width: 100%;
+    font-size: 1rem;
+    padding: 12px;
   }
+
+  .feedback-modal form {
+    max-width: 100%;
+    padding: 20px;
+  }
+
+  .photo-scroll {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .photo-scroll img {
+    max-height: 180px;
+    width: 100%;
+  }
+
+  .modal-content-exercise {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 10px;
+    padding: 2rem 1.5rem;
+    border-radius: 10px;
+  }
+
+  .aside-dropdown {
+    display: block;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .aside-header {
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: #eee;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .aside-header:hover {
+    background: #e0e0e0;
+  }
+}
+
+/* ------------------------------
+   UNIFORM WIDTH
+------------------------------ */
+
+.uniform-width {
+  /*width: 100%;*/
+  max-width: 900px;
+  margin: 0 auto;
 }

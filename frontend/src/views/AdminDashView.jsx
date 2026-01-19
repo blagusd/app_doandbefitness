@@ -28,12 +28,10 @@ function AdminDashboard() {
   // -----------------------------
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-
   const [weekNumber, setWeekNumber] = useState(1);
   const [weekDays, setWeekDays] = useState([]);
   const [exerciseMap, setExerciseMap] = useState({});
   const [userPlans, setUserPlans] = useState([]);
-
   const [exerciseForm, setExerciseForm] = useState({
     name: "",
     youtubeLink: "",

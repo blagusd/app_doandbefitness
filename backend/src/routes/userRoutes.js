@@ -97,7 +97,7 @@ router.post(
         error: err,
       });
     }
-  }
+  },
 );
 
 const storage = multer.diskStorage({
@@ -106,7 +106,8 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = file.originalname.split(".").pop();
-    cb(null, `${req.user.id}_${file.fieldname}_${Date.now()}.${ext}`);
+    const unique = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    cb(null, `${req.user.id}_${file.fieldname}_${unique}.${ext}`);
   },
 });
 
@@ -177,7 +178,7 @@ router.post(
         error: err,
       });
     }
-  }
+  },
 );
 
 router.get("/photos", authMiddleware, async (req, res) => {
@@ -205,7 +206,7 @@ router.get(
         .status(500)
         .json({ message: "Error fetching weight history", error: err });
     }
-  }
+  },
 );
 
 router.get(
@@ -221,7 +222,7 @@ router.get(
     } catch (err) {
       res.status(500).json({ message: "Error fetching photos", error: err });
     }
-  }
+  },
 );
 
 module.exports = router;

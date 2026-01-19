@@ -1,0 +1,43 @@
+.video-aside {
+  width: 220px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-right: 1px solid #ddd;
+  border-radius: 8px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.video-aside h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: --color-text-primary;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 6px;
+}
+
+.exercise-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exercise-buttons button {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  background-color: coral;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.exercise-buttons button:hover {
+  background-color: #005fa3;
+}

@@ -7,6 +7,8 @@ import AdminDashboard from "./views/AdminDashView";
 import ResetPasswordView from "./views/ResetPasswordView";
 import PricingView from "./views/PricingView";
 import LandingView from "./views/LandingView";
+import AbsExercises from "./views/AbsExercises";
+import StretchingExercises from "./views/StretchingExercises";
 
 import LoginModal from "./components/LoginModal";
 import RegisterModal from "./components/RegisterModal";
@@ -56,13 +58,31 @@ function App() {
           </div>
 
           <div className="nav-right">
-            <Link to="/" className="nav-link">
-              Početna
-            </Link>
+            {!isLoggedIn && (
+              <>
+                <Link to="/" className="nav-link">
+                  Početna
+                </Link>
 
-            <Link to="/pricing" className="nav-link">
-              Cjenik
-            </Link>
+                <Link to="/pricing" className="nav-link">
+                  Cjenik
+                </Link>
+              </>
+            )}
+
+            {isLoggedIn && role === "admin" && (
+              <>
+                <Link to="/dashboard" className="nav-link">
+                  Početna
+                </Link>
+                <Link to="/abs-exercises" className="nav-link">
+                  Vježbe za trbuh
+                </Link>
+                <Link to="/stretching-exercises" className="nav-link">
+                  Vježbe istezanja
+                </Link>
+              </>
+            )}
 
             {!isLoggedIn ? (
               <button className="login-btn" onClick={() => setShowLogin(true)}>
@@ -93,6 +113,11 @@ function App() {
           <Route
             path="/reset-password/:token"
             element={<ResetPasswordView />}
+          />
+          <Route path="/abs-exercises" element={<AbsExercises />} />
+          <Route
+            path="/stretching-exercises"
+            element={<StretchingExercises />}
           />
 
           {/* Catch-all fallback */}
