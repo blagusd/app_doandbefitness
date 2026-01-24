@@ -1,6 +1,8 @@
 import WeightChart from "../views/WeightChart";
+import StepsChart from "../views/StepsChart";
 
 function AdminProgressAside({
+  stepsData,
   weightHistory,
   progressPhotos,
   photoIndex,
@@ -9,7 +11,11 @@ function AdminProgressAside({
   return (
     <aside className="progress-aside">
       {" "}
-      <h3>Napredak korisnika</h3>{" "}
+      <h3>Napredak korisnika</h3>
+      {/* STEPS */}
+      <div className="chart-container">
+        <StepsChart data={stepsData} />
+      </div>
       <div className="chart-container">
         {" "}
         <WeightChart data={weightHistory} />{" "}
@@ -36,8 +42,8 @@ function AdminProgressAside({
                   {pos === "front"
                     ? "Sprijeda"
                     : pos === "side"
-                    ? "Bočno"
-                    : "Straga"}{" "}
+                      ? "Bočno"
+                      : "Straga"}{" "}
                   :{" "}
                 </strong>{" "}
                 {currentPhotoUrl ? (

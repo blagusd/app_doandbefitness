@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema({
     side: [String],
     back: [String],
   },
+  stepsHistory: {
+    type: [
+      {
+        date: { type: Date, default: Date.now },
+        steps: Number,
+      },
+    ],
+    default: [],
+  },
+
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
 });

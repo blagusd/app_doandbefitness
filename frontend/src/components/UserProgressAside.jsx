@@ -1,11 +1,15 @@
 import WeightChart from "../views/WeightChart";
+import StepsForm from "../components/StepsForm";
+import StepsChart from "../views/StepsChart";
 
 function UserProgressAside({
+  token,
+  stepsData,
+  fetchSteps,
   weightInput,
   setWeightInput,
   weightHistory,
   handleWeightSubmit,
-
   progressPhotos,
   handlePhotoUpload,
   scrollPhoto,
@@ -14,6 +18,17 @@ function UserProgressAside({
   return (
     <aside className="progress-aside uniform-width">
       <h3>Praćenje napretka</h3>
+
+      {/* STEPS */}
+      <div className="steps-section">
+        <h4>Koraci</h4>
+
+        <StepsForm onSaved={fetchSteps} token={token} />
+
+        <div className="chart-container">
+          <StepsChart data={stepsData} />
+        </div>
+      </div>
 
       {/* WEIGHT */}
       <form onSubmit={handleWeightSubmit} className="weight-form">

@@ -20,8 +20,8 @@ function LandingView() {
             Želite unaprijediti svoje zdravlje i prehranu?
           </p>
           <p className="story">
-            <strong>Ja Vam mogu pomoć.</strong> Svi ovi izazovi su vrlo dobro
-            poznati. Najviše sam ipak učila kroz vlastito iskustvo.{" "}
+            <strong>Ja Vam mogu pomoći.</strong> Svi ovi izazovi su mi vrlo
+            dobro poznati. Najviše sam ipak učila kroz vlastito iskustvo.{" "}
           </p>
           <p className="story">
             Svakoga očekuje <span className="emphasis">individualni plan</span>,
@@ -32,7 +32,7 @@ function LandingView() {
           </p>
         </div>
         <div className="col image">
-          <img src={doroteaNaslovna} alt="Dorotea" />
+          <img src={doroteaNaslovna} alt="Dorotea" width="500" height="667" />
         </div>
         <div className="col text wide">
           <div className="col text wide">
@@ -60,9 +60,9 @@ function LandingView() {
             </p>
 
             <p className="story">
-              <strong>Zainteresirani?</strong> Registrirajte se već danas. Nakon
-              prijave šaljem inicijalni upitnik, a dalje se dogovaramo oko
-              detalja putem e‑maila.{" "}
+              <strong>Zainteresirani?</strong> Prijavite se već danas. Ispunite
+              inicijalni upitnik, a dalje se dogovaramo oko detalja putem
+              e‑maila.{" "}
             </p>
             <p className="story">
               Za sva pitanja uvijek sam dostupna, a tu je i

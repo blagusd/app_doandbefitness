@@ -50,6 +50,9 @@ function AdminDashboard() {
     side: 0,
     back: 0,
   });
+  const [stepsData, setStepsData] = useState([]);
+
+  const token = localStorage.getItem("token");
 
   const scrollPhoto = (position, direction) => {
     const photos = progressPhotos[position] || [];
@@ -113,6 +116,12 @@ function AdminDashboard() {
 
     loadPlan();
   }, [selectedUser, weekNumber]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      fetchUserSteps();
+    }
+  }, [selectedUser]);
 
   // -----------------------------
   // SELECT USER
@@ -216,6 +225,29 @@ function AdminDashboard() {
       setWeekDays([]);
     } else {
       alert("Plan nije pronađen");
+    }
+  };
+
+  const fetchUserSteps = async () => {
+    if (!selectedUser) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/progress/steps/user/${selectedUser._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!res.ok) {
+        console.error("Greška pri dohvaćanju koraka korisnika:", res.status);
+        return;
+      }
+
+      const data = await res.json();
+      setStepsData(data);
+    } catch (err) {
+      console.error("Error fetching user steps:", err);
     }
   };
 
@@ -461,6 +493,7 @@ function AdminDashboard() {
 
       {/* RIGHT ASIDE */}
       <AdminProgressAside
+        stepsData={stepsData}
         weightHistory={weightHistory}
         progressPhotos={progressPhotos}
         photoIndex={photoIndex}

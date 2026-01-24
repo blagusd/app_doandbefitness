@@ -12,6 +12,7 @@ import { fetchUser } from "../services/userService";
 import { fetchWeightHistory, saveWeight } from "../services/weightService";
 import { fetchPhotos, uploadPhoto } from "../services/photoService";
 import { sendFeedbackEmail, completeWeek } from "../services/feedbackService";
+import StepsForm from "../components/StepsForm.jsx";
 
 // UTILS
 import { getEmbedUrl } from "../utils/youtube";
@@ -40,6 +41,7 @@ function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showVideoAside, setShowVideoAside] = useState(true);
   const [showProgressAside, setShowProgressAside] = useState(true);
+  const [stepsData, setStepsData] = useState([]);
 
   // -----------------------------
   // FETCH ALL USER DATA
@@ -49,7 +51,7 @@ function Dashboard() {
 
     const load = async () => {
       const weeklyPlan = await fetchWeeklyPlan(userId);
-      setWeeklyPlans([weeklyPlan]);
+      setWeeklyPlans(weeklyPlan);
 
       const user = await fetchUser(userId);
       setCompletedWeeks(user.completedWeeks || []);
@@ -151,6 +153,26 @@ function Dashboard() {
     setPhotoIndex((prev) => ({ ...prev, [position]: next }));
   };
 
+  const fetchSteps = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/progress/steps", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!res.ok) {
+        console.error("Greška pri dohvaćanju koraka:", res.status);
+        return;
+      }
+
+      const data = await res.json();
+      setStepsData(data);
+    } catch (err) {
+      console.error("Error fetching steps:", err);
+    }
+  };
+
   // -----------------------------
   // RENDER
   // -----------------------------
@@ -177,7 +199,7 @@ function Dashboard() {
 
         <main className="main-view">
           <h2>Tvoji tjedni planovi</h2>
-
+          {console.log("weeklyPlans:", weeklyPlans)}
           {weeklyPlans.map((plan) => {
             const isExpanded = expandedWeek === plan.weekNumber;
             const isCompleted = completedWeeks.includes(plan.weekNumber);
@@ -194,11 +216,11 @@ function Dashboard() {
                   <span>Tjedan {plan.weekNumber}</span>
                   <span className="arrow">{isExpanded ? "▲" : "▼"}</span>
                 </div>
-
-                {/* WEEK CONTENT */}
+                {/* WEEK CONTENT */}{" "}
                 {isExpanded && (
                   <div className="week-content">
-                    {plan.days.map((day, idx) => {
+                    {" "}
+                    {(plan.days ?? []).map((day, idx) => {
                       const isDayOpen = expandedDays[day.day];
 
                       return (
@@ -220,7 +242,7 @@ function Dashboard() {
                               {day.exercises.map((ex) => (
                                 <div className="exercise" key={ex._id}>
                                   <h4>{ex.name}</h4>
-
+                                  {console.log(ex.youtubeLink)}
                                   {ex.youtubeLink && (
                                     <iframe
                                       width="100%"
@@ -322,7 +344,6 @@ function Dashboard() {
                         </div>
                       );
                     })}
-
                     {!isCompleted && (
                       <button
                         className="finish-week-btn"
@@ -368,6 +389,8 @@ function Dashboard() {
             </div>
             {showProgressAside && (
               <UserProgressAside
+                stepsData={stepsData}
+                fetchSteps={fetchSteps}
                 weightInput={weightInput}
                 setWeightInput={setWeightInput}
                 weightHistory={weightHistory}

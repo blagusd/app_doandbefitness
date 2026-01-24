@@ -47,14 +47,14 @@ router.post("/assign", async (req, res) => {
 // 2) Get weekly plan for a user
 router.get("/:userId", async (req, res) => {
   try {
-    const plan = await WeeklyPlan.findOne({ userId: req.params.userId });
-
-    if (!plan)
-      return res.status(404).json({ message: "Weekly plan not found" });
-
-    res.json(plan);
+    const plans = await WeeklyPlan.find({ userId: req.params.userId }).sort({
+      weekNumber: 1,
+    });
+    if (!plans || plans.length === 0)
+      return res.status(404).json({ message: "Weekly plans not found" });
+    res.json(plans);
   } catch (err) {
-    console.error("Error fetching weekly plan:", err);
+    console.error("Error fetching weekly plans:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

@@ -16,6 +16,11 @@ const securityMiddleware = require("./middleware/securityMiddleware");
 const { swaggerUi, specs } = require("./config/swagger");
 
 const app = express();
+console.log(
+  "Using progressRoutes from:",
+  require.resolve("./routes/progressRoutes"),
+);
+
 app.use(
   "/uploads",
   express.static("uploads", {

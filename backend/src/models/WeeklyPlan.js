@@ -12,7 +12,7 @@ const weeklyPlanSchema = new mongoose.Schema({
           exerciseId: { type: mongoose.Schema.Types.ObjectId, ref: "Exercise" },
           name: String,
           trainerNotes: String,
-
+          youtubeLink: String,
           plannedSets: Number,
           plannedReps: Number,
           plannedWeight: Number,
