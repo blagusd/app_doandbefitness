@@ -1,5 +1,4 @@
 import "./DashView.css";
-import WeightChart from "./WeightChart.jsx";
 import { useEffect, useState } from "react";
 import UserVideoExerciseAside from "../components/UserVideoExerciseAside";
 import UserProgressAside from "../components/UserProgressAside.jsx";
@@ -12,7 +11,7 @@ import { fetchUser } from "../services/userService";
 import { fetchWeightHistory, saveWeight } from "../services/weightService";
 import { fetchPhotos, uploadPhoto } from "../services/photoService";
 import { sendFeedbackEmail, completeWeek } from "../services/feedbackService";
-import StepsForm from "../components/StepsForm.jsx";
+import { fetchSteps } from "../services/stepsService.jsx";
 
 // UTILS
 import { getEmbedUrl } from "../utils/youtube";
@@ -50,8 +49,9 @@ function Dashboard() {
     if (!userId) return;
 
     const load = async () => {
-      const weeklyPlan = await fetchWeeklyPlan(userId);
-      setWeeklyPlans(weeklyPlan);
+      const plans = await fetchWeeklyPlan(userId);
+      setWeeklyPlans(plans);
+      setExpandedWeek(plans[0]?.weekNumber || null);
 
       const user = await fetchUser(userId);
       setCompletedWeeks(user.completedWeeks || []);
@@ -61,8 +61,6 @@ function Dashboard() {
 
       const photos = await fetchPhotos();
       setProgressPhotos(photos.progressPhotos || {});
-
-      setExpandedWeek(weeklyPlan.weekNumber);
     };
 
     load();
@@ -71,6 +69,10 @@ function Dashboard() {
   useEffect(() => {
     document.body.style.overflow = showModal ? "hidden" : "auto";
   }, [showModal]);
+
+  useEffect(() => {
+    loadSteps();
+  }, []);
 
   // -----------------------------
   // DAY TOGGLE
@@ -82,11 +84,11 @@ function Dashboard() {
   // -----------------------------
   // SAVE EXERCISE
   // -----------------------------
-  const saveExerciseHandler = async (planId, day, ex) => {
-    const data = userInput[ex._id];
+  const saveExerciseHandler = async (weeklyPlanId, dayName, exercise) => {
+    const data = userInput[exercise._id];
     if (!data) return;
 
-    await saveExercise(planId, day, ex._id, data);
+    await saveExercise(weeklyPlanId, dayName, exercise._id, data);
   };
 
   // -----------------------------
@@ -153,31 +155,16 @@ function Dashboard() {
     setPhotoIndex((prev) => ({ ...prev, [position]: next }));
   };
 
-  const fetchSteps = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/progress/steps", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!res.ok) {
-        console.error("Greška pri dohvaćanju koraka:", res.status);
-        return;
-      }
-
-      const data = await res.json();
-      setStepsData(data);
-    } catch (err) {
-      console.error("Error fetching steps:", err);
-    }
-  };
+  const loadSteps = () =>
+    fetchSteps()
+      .then((data) => setStepsData(data))
+      .catch((err) => console.error(err));
 
   // -----------------------------
   // RENDER
   // -----------------------------
   if (weeklyPlans === null) return <p>Učitavanje...</p>;
-  if (weeklyPlans.length === 0) return <p>Nema dostupnih planova.</p>;
+  //if (weeklyPlans.length === 0) return <p>Nema dostupnih planova.</p>;
 
   return (
     <>
@@ -352,6 +339,7 @@ function Dashboard() {
                         Tjedan završen
                       </button>
                     )}
+                    {isCompleted && <span className="checkmark">✔</span>}
                   </div>
                 )}
               </div>

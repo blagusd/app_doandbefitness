@@ -2,7 +2,7 @@ import "./AdminDashView.css";
 import { useEffect, useState } from "react";
 
 // SERVICES
-import { fetchUsers, fetchUserPlans } from "../services/userService";
+import { fetchUsers } from "../services/userService";
 import { fetchExercises, createExercise } from "../services/exerciseService";
 import {
   fetchPlanForWeek,
@@ -10,7 +10,10 @@ import {
   assignWeeklyPlan,
   deletePlanService,
 } from "../services/planService";
-import { fetchWeightHistory, fetchPhotos } from "../services/progressService";
+import { fetchWeightHistoryAdmin } from "../services/weightService";
+import { fetchPhotosAdmin } from "../services/photoService";
+import { fetchStepsAdmin } from "../services/stepsService";
+import { fetchUserWeeklyPlans } from "../services/weeklyPlanService";
 
 // UTILS
 import {
@@ -52,8 +55,6 @@ function AdminDashboard() {
   });
   const [stepsData, setStepsData] = useState([]);
 
-  const token = localStorage.getItem("token");
-
   const scrollPhoto = (position, direction) => {
     const photos = progressPhotos[position] || [];
     const current = photoIndex[position];
@@ -66,38 +67,36 @@ function AdminDashboard() {
   };
 
   // -----------------------------
-  // LOAD USERS + EXERCISES + PROGRESS
+  // LOAD USERS + EXERCISES
   // -----------------------------
   useEffect(() => {
     const load = async () => {
-      // USERS
       const usersData = await fetchUsers();
       setUsers(Array.isArray(usersData) ? usersData : []);
 
-      // EXERCISES
       const exercises = await fetchExercises();
       const map = {};
       exercises.forEach((ex) => (map[ex._id] = ex));
       setExerciseMap(map);
-
-      // PROGRESS
-      const weight = await fetchWeightHistory();
-      setWeightHistory(weight.weightHistory || []);
-
-      const photos = await fetchPhotos();
-      setProgressPhotos(photos.progressPhotos || {});
     };
 
     load();
   }, []);
 
   // -----------------------------
-  // LOAD PLAN WHEN USER OR WEEK CHANGES
+  // LOAD WEEK DATA WHEN USER / WEEK OR USERPLANS CHANGE
   // -----------------------------
   useEffect(() => {
     if (!selectedUser) return;
 
-    const loadPlan = async () => {
+    const loadWeek = async () => {
+      const weeklyPlan = userPlans.find((p) => p.weekNumber === weekNumber);
+
+      if (weeklyPlan) {
+        setWeekDays(weeklyPlan.days || []);
+        return;
+      }
+
       const res = await fetchPlanForWeek(selectedUser._id, weekNumber);
 
       if (res.status === 404) {
@@ -111,15 +110,24 @@ function AdminDashboard() {
       }
 
       const plan = await res.json();
-      setWeekDays(plan.workouts);
+      setWeekDays(plan.workouts || []);
     };
 
-    loadPlan();
-  }, [selectedUser, weekNumber]);
+    loadWeek();
+  }, [selectedUser, weekNumber, userPlans]);
+
+  // -----------------------------
+  // FETCH STEPS FOR SELECTED USER
+  // -----------------------------
+  const fetchUserSteps = async (userId) => {
+    if (!userId) return;
+    const steps = await fetchStepsAdmin(userId);
+    setStepsData(steps || []);
+  };
 
   useEffect(() => {
     if (selectedUser) {
-      fetchUserSteps();
+      fetchUserSteps(selectedUser._id);
     }
   }, [selectedUser]);
 
@@ -130,14 +138,17 @@ function AdminDashboard() {
     setSelectedUser(user);
     setWeekNumber(1);
 
-    const plans = await fetchUserPlans(user._id);
+    const plans = await fetchUserWeeklyPlans(user._id);
     setUserPlans(Array.isArray(plans) ? plans : []);
 
-    const weight = await fetchWeightHistory(user._id);
+    const weight = await fetchWeightHistoryAdmin(user._id);
     setWeightHistory(weight.weightHistory || []);
 
-    const photos = await fetchPhotos(user._id);
+    const photos = await fetchPhotosAdmin(user._id);
     setProgressPhotos(photos.progressPhotos || {});
+
+    const steps = await fetchStepsAdmin(user._id);
+    setStepsData(steps || []);
 
     console.log("Photos for user:", user.fullName, photos.progressPhotos);
   };
@@ -148,7 +159,6 @@ function AdminDashboard() {
   const handleCreateExercise = async () => {
     const newExercise = await createExercise(exerciseForm);
 
-    // refresh exercise map
     const exercises = await fetchExercises();
     const map = {};
     exercises.forEach((ex) => (map[ex._id] = ex));
@@ -201,13 +211,15 @@ function AdminDashboard() {
     };
 
     const savedPlan = await savePlanService(payload);
-
     const assignRes = await assignWeeklyPlan(selectedUser._id, savedPlan._id);
 
     if (!assignRes.ok) {
       alert("Plan spremljen, ali WeeklyPlan nije kreiran.");
       return;
     }
+
+    const plans = await fetchUserWeeklyPlans(selectedUser._id);
+    setUserPlans(Array.isArray(plans) ? plans : []);
 
     alert("Plan uspješno spremljen i dodijeljen korisniku!");
   };
@@ -223,31 +235,10 @@ function AdminDashboard() {
     if (res.ok) {
       alert("Plan obrisan");
       setWeekDays([]);
+      const plans = await fetchUserWeeklyPlans(selectedUser._id);
+      setUserPlans(Array.isArray(plans) ? plans : []);
     } else {
       alert("Plan nije pronađen");
-    }
-  };
-
-  const fetchUserSteps = async () => {
-    if (!selectedUser) return;
-
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/progress/steps/user/${selectedUser._id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (!res.ok) {
-        console.error("Greška pri dohvaćanju koraka korisnika:", res.status);
-        return;
-      }
-
-      const data = await res.json();
-      setStepsData(data);
-    } catch (err) {
-      console.error("Error fetching user steps:", err);
     }
   };
 
@@ -287,7 +278,12 @@ function AdminDashboard() {
 
             {/* WEEK BUILDER */}
             <section className="week-builder">
-              <h3>Tjedni plan za {selectedUser.fullName}</h3>
+              <h3>
+                Tjedni plan za {selectedUser.fullName}
+                {selectedUser.completedWeeks?.includes(weekNumber) && (
+                  <span className="week-done"> ✔ Tjedan završen</span>
+                )}
+              </h3>
 
               <label>
                 Tjedan:
@@ -359,15 +355,22 @@ function AdminDashboard() {
                               <p>
                                 <strong>Bilješke:</strong> {ex.notes || "—"}
                               </p>
+
+                              {/* PLANIRANO */}
                               <p>
-                                <strong>Ponavljanja:</strong> {ex.reps || "—"}
+                                <strong>Planirano:</strong>
                               </p>
+                              <p>Serije: {ex.plannedSets ?? "—"}</p>
+                              <p>Ponavljanja: {ex.plannedReps ?? "—"}</p>
+                              <p>Kilaža: {ex.plannedWeight ?? "—"} kg</p>
+
+                              {/* ODRAĐENO */}
                               <p>
-                                <strong>Setovi:</strong> {ex.sets || "—"}
+                                <strong>Odrađeno:</strong>
                               </p>
-                              <p>
-                                <strong>Težina:</strong> {ex.weight || "—"} kg
-                              </p>
+                              <p>Serije: {ex.actualSets ?? "—"}</p>
+                              <p>Ponavljanja: {ex.actualReps ?? "—"}</p>
+                              <p>Kilaža: {ex.actualWeight ?? "—"} kg</p>
 
                               {ex.youtubeLink && (
                                 <iframe

@@ -5,6 +5,13 @@ export const fetchWeightHistory = async () => {
   return res.json();
 };
 
+export const fetchWeightHistoryAdmin = async (userId) => {
+  const res = await fetch(`http://localhost:5000/auth/weight/${userId}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  return res.json();
+};
+
 export const saveWeight = async (weight) => {
   return fetch("http://localhost:5000/auth/weight", {
     method: "POST",

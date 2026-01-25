@@ -2,7 +2,6 @@ import { useState } from "react";
 
 function StepsForm({ onSaved }) {
   const [steps, setSteps] = useState("");
-  console.log("Submitting steps:", steps);
 
   const saveSteps = async (e) => {
     e.preventDefault();
