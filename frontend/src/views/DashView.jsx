@@ -40,6 +40,7 @@ function Dashboard() {
     side: 0,
     back: 0,
   });
+  const [fullscreenPhoto, setFullscreenPhoto] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -144,6 +145,25 @@ function Dashboard() {
     if (res.ok) {
       const data = await res.json();
       setProgressPhotos(data.progressPhotos);
+    }
+  };
+
+  const openFullscreen = (pos, index) => {
+    setFullscreenPhoto({ pos, index });
+  };
+  const closeFullscreen = () => {
+    setFullscreenPhoto(null);
+  };
+
+  const navigateFullscreen = (direction) => {
+    if (!fullscreenPhoto) return;
+    const photos = progressPhotos[fullscreenPhoto.pos] || [];
+    const newIndex =
+      direction === "left"
+        ? fullscreenPhoto.index - 1
+        : fullscreenPhoto.index + 1;
+    if (newIndex >= 0 && newIndex < photos.length) {
+      setFullscreenPhoto({ ...fullscreenPhoto, index: newIndex });
     }
   };
 
@@ -401,7 +421,6 @@ function Dashboard() {
             >
               <h3>Praćenje napretka {showProgressAside ? "▲" : "▼"}</h3>
             </div>
-
             {showProgressAside && (
               <UserProgressAside
                 stepsData={stepsData}
@@ -414,8 +433,56 @@ function Dashboard() {
                 handlePhotoUpload={handlePhotoUpload}
                 scrollPhoto={scrollPhoto}
                 photoIndex={photoIndex}
+                openFullscreen={openFullscreen}
               />
-            )}
+            )}{" "}
+            {/* FULLSCREEN OVERLAY */}{" "}
+            {fullscreenPhoto && (
+              <div className="fullscreen-overlay" onClick={closeFullscreen}>
+                {" "}
+                <img
+                  src={
+                    progressPhotos[fullscreenPhoto.pos][
+                      fullscreenPhoto.index
+                    ].startsWith("http")
+                      ? progressPhotos[fullscreenPhoto.pos][
+                          fullscreenPhoto.index
+                        ]
+                      : `http://localhost:5000${progressPhotos[fullscreenPhoto.pos][fullscreenPhoto.index]}`
+                  }
+                  alt="fullscreen"
+                  className="fullscreen-image"
+                  onClick={(e) => e.stopPropagation()}
+                />{" "}
+                {/* Left arrow */}{" "}
+                {fullscreenPhoto.index > 0 && (
+                  <button
+                    className="nav-button left"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateFullscreen("left");
+                    }}
+                  >
+                    {" "}
+                    ‹{" "}
+                  </button>
+                )}{" "}
+                {/* Right arrow */}{" "}
+                {fullscreenPhoto.index <
+                  progressPhotos[fullscreenPhoto.pos].length - 1 && (
+                  <button
+                    className="nav-button right"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateFullscreen("right");
+                    }}
+                  >
+                    {" "}
+                    ›{" "}
+                  </button>
+                )}{" "}
+              </div>
+            )}{" "}
           </div>
         )}
       </div>

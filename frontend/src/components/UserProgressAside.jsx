@@ -14,6 +14,7 @@ function UserProgressAside({
   handlePhotoUpload,
   scrollPhoto,
   photoIndex,
+  openFullscreen,
 }) {
   return (
     <aside className="progress-aside uniform-width">
@@ -106,6 +107,7 @@ function UserProgressAside({
                       src={currentPhotoUrl}
                       alt={`${pos}-${currentIndex}`}
                       className="progress-photo"
+                      onClick={() => openFullscreen(pos, currentIndex)}
                     />
 
                     <button

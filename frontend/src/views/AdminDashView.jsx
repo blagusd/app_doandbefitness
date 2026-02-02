@@ -46,6 +46,7 @@ function AdminDashboard() {
     side: 0,
     back: 0,
   });
+  const [fullscreenPhoto, setFullscreenPhoto] = useState(null);
   const [stepsData, setStepsData] = useState([]);
 
   const scrollPhoto = (position, direction) => {
@@ -237,137 +238,165 @@ function AdminDashboard() {
     setWeekDays((prev) => normalizeDays(prev.slice(0, -1)));
   };
 
+  const openFullscreen = (pos, index) => {
+    setFullscreenPhoto({ pos, index });
+  };
+  const closeFullscreen = () => {
+    setFullscreenPhoto(null);
+  };
+
+  const navigateFullscreen = (direction) => {
+    if (!fullscreenPhoto) return;
+    const photos = progressPhotos[fullscreenPhoto.pos] || [];
+    const newIndex =
+      direction === "left"
+        ? fullscreenPhoto.index - 1
+        : fullscreenPhoto.index + 1;
+    if (newIndex >= 0 && newIndex < photos.length) {
+      setFullscreenPhoto({ ...fullscreenPhoto, index: newIndex });
+    }
+  };
+
   return (
     <div className="admin-dashboard">
-      {/* SIDEBAR */}
+      {" "}
+      {/* SIDEBAR */}{" "}
       <aside className="sidebar">
-        <h3>Korisnici</h3>
+        {" "}
+        <h3>Korisnici</h3>{" "}
         <ul>
+          {" "}
           {users.map((user) => (
             <li
               key={user._id}
               onClick={() => handleUserSelect(user)}
               className={selectedUser?._id === user._id ? "active" : ""}
             >
-              {user.fullName} ({user.email})
+              {" "}
+              {user.fullName} ({user.email}){" "}
             </li>
-          ))}
-        </ul>
-      </aside>
-
-      {/* MAIN */}
+          ))}{" "}
+        </ul>{" "}
+      </aside>{" "}
+      {/* MAIN */}{" "}
       <main className="main-view">
+        {" "}
         {!selectedUser ? (
           <p>Odaberi korisnika s lijeve strane.</p>
         ) : (
           <>
-            {/* USER SUMMARY */}
+            {" "}
+            {/* USER SUMMARY */}{" "}
             <section className="client-summary">
-              <h2>{selectedUser.fullName}</h2>
-              <p>Email: {selectedUser.email}</p>
-              <p>Broj tjednih planova: {userPlans.length}</p>
-            </section>
-
-            {/* WEEK BUILDER */}
+              {" "}
+              <h2>{selectedUser.fullName}</h2>{" "}
+              <p>Email: {selectedUser.email}</p>{" "}
+              <p>Broj tjednih planova: {userPlans.length}</p>{" "}
+            </section>{" "}
+            {/* WEEK BUILDER */}{" "}
             <section className="week-builder">
+              {" "}
               <h3>
-                Tjedni plan za {selectedUser.fullName}
+                {" "}
+                Tjedni plan za {selectedUser.fullName}{" "}
                 {selectedUser.completedWeeks?.includes(weekNumber) && (
                   <span className="week-done"> ✔ Tjedan završen</span>
-                )}
-              </h3>
-
+                )}{" "}
+              </h3>{" "}
               <div className="day-controls">
-                <button onClick={increasePlanDays}>➕ Dodaj dan</button>
-
+                {" "}
+                <button onClick={increasePlanDays}>➕ Dodaj dan</button>{" "}
                 {selectedUser.planDays > 1 && (
                   <button onClick={decreasePlanDays}>➖ Ukloni dan</button>
-                )}
-              </div>
-
+                )}{" "}
+              </div>{" "}
               <label>
-                Tjedan:
+                {" "}
+                Tjedan:{" "}
                 <select
                   value={weekNumber}
                   onChange={(e) => setWeekNumber(Number(e.target.value))}
                 >
+                  {" "}
                   {userPlans.map((p) => (
                     <option key={p._id} value={p.weekNumber}>
-                      Tjedan {p.weekNumber}
+                      {" "}
+                      Tjedan {p.weekNumber}{" "}
                     </option>
-                  ))}
-                </select>
+                  ))}{" "}
+                </select>{" "}
                 <button
                   onClick={() => {
                     const nextWeek =
                       (userPlans[userPlans.length - 1]?.weekNumber || 0) + 1;
-
                     setWeekNumber(nextWeek);
-
                     const numDays = selectedUser.planDays || 3;
                     const days = Array.from({ length: numDays }, (_, i) => ({
                       day: `Dan ${i + 1}`,
                       exercises: [],
                     }));
-
                     setWeekDays(days);
                   }}
                 >
-                  ➕ Dodaj novi tjedan
-                </button>
-              </label>
-
-              {/* DAYS */}
+                  {" "}
+                  ➕ Dodaj novi tjedan{" "}
+                </button>{" "}
+              </label>{" "}
+              {/* DAYS */}{" "}
               <div className="week-days">
+                {" "}
                 {weekDays.map((day, idx) => (
                   <div key={idx} className="day-card">
-                    <h4>{day.day}</h4>
-
+                    {" "}
+                    <h4>{day.day}</h4>{" "}
                     {day.exercises.length === 0 ? (
                       <p>Još nema vježbi.</p>
                     ) : (
                       <ul>
+                        {" "}
                         {day.exercises.map((exItem, i) => {
                           const exercise = exerciseMap[exItem.exerciseId];
-
                           if (!exercise) {
                             return (
                               <li key={i}>
-                                Nepoznata vježba (ID: {exItem.exerciseId})
+                                {" "}
+                                Nepoznata vježba (ID: {exItem.exerciseId}){" "}
                               </li>
                             );
                           }
-
                           return (
                             <li key={i}>
+                              {" "}
                               <p>
-                                <strong>Naziv:</strong> {exercise.name}
-                              </p>
+                                {" "}
+                                <strong>Naziv:</strong> {exercise.name}{" "}
+                              </p>{" "}
                               <p>
+                                {" "}
                                 <strong>Mišićna skupina:</strong>{" "}
-                                {exercise.muscleGroup || "—"}
-                              </p>
+                                {exercise.muscleGroup || "—"}{" "}
+                              </p>{" "}
                               <p>
+                                {" "}
                                 <strong>Bilješke:</strong>{" "}
-                                {exercise.notes || "—"}
-                              </p>
-
-                              {/* PLANIRANO */}
+                                {exercise.notes || "—"}{" "}
+                              </p>{" "}
+                              {/* PLANIRANO */}{" "}
                               <p>
-                                <strong>Planirano:</strong>
-                              </p>
-                              <p>Serije: {exercise.sets ?? "—"}</p>
-                              <p>Ponavljanja: {exercise.reps ?? "—"}</p>
-                              <p>Kilaža: {exercise.weight ?? "—"} kg</p>
-
-                              {/* ODRAĐENO */}
+                                {" "}
+                                <strong>Planirano:</strong>{" "}
+                              </p>{" "}
+                              <p>Serije: {exercise.sets ?? "—"}</p>{" "}
+                              <p>Ponavljanja: {exercise.reps ?? "—"}</p>{" "}
+                              <p>Kilaža: {exercise.weight ?? "—"} kg</p>{" "}
+                              {/* ODRAĐENO */}{" "}
                               <p>
-                                <strong>Odrađeno:</strong>
-                              </p>
-                              <p>Serije: {exItem.actualSets ?? "—"}</p>
-                              <p>Ponavljanja: {exItem.actualReps ?? "—"}</p>
-                              <p>Kilaža: {exItem.actualWeight ?? "—"} kg</p>
-
+                                {" "}
+                                <strong>Odrađeno:</strong>{" "}
+                              </p>{" "}
+                              <p>Serije: {exItem.actualSets ?? "—"}</p>{" "}
+                              <p>Ponavljanja: {exItem.actualReps ?? "—"}</p>{" "}
+                              <p>Kilaža: {exItem.actualWeight ?? "—"} kg</p>{" "}
                               {exercise.youtubeLink && (
                                 <iframe
                                   width="100%"
@@ -380,127 +409,96 @@ function AdminDashboard() {
                                   frameBorder="0"
                                   allowFullScreen
                                 ></iframe>
-                              )}
-
+                              )}{" "}
                               <button
                                 onClick={() => removeExerciseFromDay(idx, i)}
                               >
-                                Obriši
-                              </button>
+                                {" "}
+                                Obriši{" "}
+                              </button>{" "}
                             </li>
                           );
-                        })}
+                        })}{" "}
                       </ul>
-                    )}
-
-                    {/* ADD EXERCISE FORM */}
+                    )}{" "}
+                    {/* ADD EXERCISE FORM */}{" "}
                     <div className="exercise-form">
-                      <input
-                        type="text"
-                        placeholder="Naziv vježbe"
-                        value={exerciseForm.name}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            name: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="text"
-                        placeholder="YouTube link"
-                        value={exerciseForm.youtubeLink}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            youtubeLink: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="text"
-                        placeholder="Mišićna skupina"
-                        value={exerciseForm.muscleGroup}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            muscleGroup: e.target.value,
-                          })
-                        }
-                      />
-                      <textarea
-                        placeholder="Bilješke"
-                        value={exerciseForm.notes}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            notes: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="number"
-                        placeholder="Ponavljanja"
-                        value={exerciseForm.reps}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            reps: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="number"
-                        placeholder="Setovi"
-                        value={exerciseForm.sets}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            sets: e.target.value,
-                          })
-                        }
-                      />
-                      <input
-                        type="number"
-                        placeholder="Težina (kg)"
-                        value={exerciseForm.weight}
-                        onChange={(e) =>
-                          setExerciseForm({
-                            ...exerciseForm,
-                            weight: e.target.value,
-                          })
-                        }
-                      />
-
+                      {" "}
                       <button onClick={() => addExerciseToDay(idx)}>
-                        Dodaj vježbu
-                      </button>
-                    </div>
+                        {" "}
+                        Dodaj vježbu{" "}
+                      </button>{" "}
+                    </div>{" "}
                   </div>
-                ))}
-              </div>
-
-              {/* SAVE / DELETE */}
+                ))}{" "}
+              </div>{" "}
+              {/* SAVE / DELETE */}{" "}
               <button className="save-plan-btn" onClick={savePlan}>
-                Spremi plan
-              </button>
-
+                {" "}
+                Spremi plan{" "}
+              </button>{" "}
               <button className="delete-plan-btn" onClick={deletePlan}>
-                Obriši ovaj tjedan
-              </button>
-            </section>
+                {" "}
+                Obriši ovaj tjedan{" "}
+              </button>{" "}
+            </section>{" "}
           </>
-        )}
-      </main>
-
-      {/* RIGHT ASIDE */}
+        )}{" "}
+      </main>{" "}
+      {/* RIGHT ASIDE */}{" "}
       <AdminProgressAside
         stepsData={stepsData}
         weightHistory={weightHistory}
         progressPhotos={progressPhotos}
         photoIndex={photoIndex}
         scrollPhoto={scrollPhoto}
-      />
+        openFullscreen={openFullscreen}
+      />{" "}
+      {/* FULLSCREEN OVERLAY */}{" "}
+      {fullscreenPhoto && (
+        <div className="fullscreen-overlay" onClick={closeFullscreen}>
+          {" "}
+          <img
+            src={
+              progressPhotos[fullscreenPhoto.pos][
+                fullscreenPhoto.index
+              ].startsWith("http")
+                ? progressPhotos[fullscreenPhoto.pos][fullscreenPhoto.index]
+                : `http://localhost:5000${progressPhotos[fullscreenPhoto.pos][fullscreenPhoto.index]}`
+            }
+            alt="fullscreen"
+            className="fullscreen-image"
+            onClick={(e) => e.stopPropagation()}
+          />{" "}
+          {/* Left arrow */}{" "}
+          {fullscreenPhoto.index > 0 && (
+            <button
+              className="nav-button left"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateFullscreen("left");
+              }}
+            >
+              {" "}
+              ‹{" "}
+            </button>
+          )}{" "}
+          {/* Right arrow */}{" "}
+          {fullscreenPhoto.index <
+            progressPhotos[fullscreenPhoto.pos].length - 1 && (
+            <button
+              className="nav-button right"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateFullscreen("right");
+              }}
+            >
+              {" "}
+              ›{" "}
+            </button>
+          )}{" "}
+        </div>
+      )}{" "}
     </div>
   );
 }

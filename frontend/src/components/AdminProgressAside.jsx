@@ -7,24 +7,27 @@ function AdminProgressAside({
   progressPhotos,
   photoIndex,
   scrollPhoto,
+  openFullscreen,
 }) {
   return (
     <aside className="progress-aside">
-      {" "}
       <h3>Napredak korisnika</h3>
+
       {/* STEPS */}
       <div className="chart-container">
         <StepsChart data={stepsData} />
       </div>
+
+      {/* WEIGHT */}
       <div className="chart-container">
-        {" "}
-        <WeightChart data={weightHistory} />{" "}
-      </div>{" "}
+        <WeightChart data={weightHistory} />
+      </div>
+
+      {/* PHOTOS */}
       <div className="photo-upload">
-        {" "}
-        <h4>Fotografije napretka</h4>{" "}
+        <h4>Fotografije napretka</h4>
+
         <div className="photo-preview">
-          {" "}
           {["front", "side", "back"].map((pos) => {
             const photos = progressPhotos[pos] || [];
             const currentIndex = photoIndex[pos];
@@ -34,54 +37,55 @@ function AdminProgressAside({
                 ? currentPhoto
                 : `http://localhost:5000${currentPhoto}`
               : null;
+
             return (
               <div key={pos} className="photo-block">
-                {" "}
                 <strong>
-                  {" "}
                   {pos === "front"
                     ? "Sprijeda"
                     : pos === "side"
                       ? "Bočno"
-                      : "Straga"}{" "}
-                  :{" "}
-                </strong>{" "}
+                      : "Straga"}
+                  :
+                </strong>
+
                 {currentPhotoUrl ? (
                   <div className="photo-scroll">
-                    {" "}
                     <button
                       onClick={() => scrollPhoto(pos, "left")}
                       disabled={currentIndex === 0}
                     >
-                      {" "}
-                      ◀{" "}
-                    </button>{" "}
+                      ◀
+                    </button>
+
                     <img
                       src={currentPhotoUrl}
                       alt={`${pos}-${currentIndex}`}
                       className="progress-photo"
-                    />{" "}
+                      onClick={() => openFullscreen(pos, currentIndex)}
+                    />
+
                     <button
                       onClick={() => scrollPhoto(pos, "right")}
                       disabled={currentIndex === photos.length - 1}
                     >
-                      {" "}
-                      ▶{" "}
-                    </button>{" "}
+                      ▶
+                    </button>
+
                     <div className="photo-counter">
-                      {" "}
-                      {currentIndex + 1} / {photos.length}{" "}
-                    </div>{" "}
+                      {currentIndex + 1} / {photos.length}
+                    </div>
                   </div>
                 ) : (
                   <p>Nema spremljenih slika</p>
-                )}{" "}
+                )}
               </div>
             );
-          })}{" "}
-        </div>{" "}
-      </div>{" "}
+          })}
+        </div>
+      </div>
     </aside>
   );
 }
+
 export default AdminProgressAside;
