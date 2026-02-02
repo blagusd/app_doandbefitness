@@ -26,7 +26,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://doandbefitness.netlify.app"],
+    origin: ["http://localhost:5173", "https://appdoandbefitness.netlify.app/"],
     credentials: true,
   }),
 );
