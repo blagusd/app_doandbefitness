@@ -29,11 +29,9 @@ app.use(express.json());
 securityMiddleware(app);
 
 mongoose
-  .connect("mongodb://appUser:%40db5780bd@localhost:27017/doandbefitness", {
-    authSource: "doandbefitness",
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error(err));
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 app.use("/auth", authRoutes);
 app.use("/api/progress", progressRoutes);
