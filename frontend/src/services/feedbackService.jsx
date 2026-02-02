@@ -1,7 +1,10 @@
 export const sendFeedbackEmail = async (week, feedback) => {
-  return fetch("http://localhost:5000/api/feedback/send", {
+  return fetch("http://localhost:5000/api/feedback/send-feedback", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
     body: JSON.stringify({ week, feedback }),
   });
 };

@@ -5,30 +5,34 @@ import UserProgressAside from "../components/UserProgressAside.jsx";
 import "../styles/progressAside.css";
 import ExerciseModal from "../components/ExerciseModal";
 
-// SERVICES
-import { fetchWeeklyPlan, saveExercise } from "../services/weeklyPlanService";
+import {
+  fetchUserWeeklyPlans,
+  fetchWeeklyPlanForWeek,
+  saveExercise,
+} from "../services/weeklyPlanService";
 import { fetchUser } from "../services/userService";
 import { fetchWeightHistory, saveWeight } from "../services/weightService";
 import { fetchPhotos, uploadPhoto } from "../services/photoService";
 import { sendFeedbackEmail, completeWeek } from "../services/feedbackService";
 import { fetchSteps } from "../services/stepsService.jsx";
+import { fetchExercises } from "../services/exerciseService";
 
-// UTILS
 import { getEmbedUrl } from "../utils/youtube";
-import { toggleDayState } from "../utils/dayUtils.jsx";
 
 function Dashboard() {
   const userId = localStorage.getItem("userId");
 
-  // STATE
   const [weeklyPlans, setWeeklyPlans] = useState([]);
-  const [userInput, setUserInput] = useState({});
-  const [completedWeeks, setCompletedWeeks] = useState([]);
   const [expandedWeek, setExpandedWeek] = useState(null);
   const [expandedDays, setExpandedDays] = useState({});
+  const [userInput, setUserInput] = useState({});
+  const [completedWeeks, setCompletedWeeks] = useState([]);
   const [feedbackWeek, setFeedbackWeek] = useState(null);
+  const [exerciseMap, setExerciseMap] = useState({});
+
   const [weightInput, setWeightInput] = useState("");
   const [weightHistory, setWeightHistory] = useState([]);
+
   const [progressPhotos, setProgressPhotos] = useState({});
   const [previewPhotos, setPreviewPhotos] = useState({});
   const [photoIndex, setPhotoIndex] = useState({
@@ -36,31 +40,40 @@ function Dashboard() {
     side: 0,
     back: 0,
   });
+
   const [showModal, setShowModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
+
   const [showVideoAside, setShowVideoAside] = useState(true);
   const [showProgressAside, setShowProgressAside] = useState(true);
+
   const [stepsData, setStepsData] = useState([]);
 
-  // -----------------------------
-  // FETCH ALL USER DATA
-  // -----------------------------
   useEffect(() => {
     if (!userId) return;
 
     const load = async () => {
-      const plans = await fetchWeeklyPlan(userId);
+      // 1) Fetch all weekly plans
+      const plans = await fetchUserWeeklyPlans(userId);
       setWeeklyPlans(plans);
-      setExpandedWeek(plans[0]?.weekNumber || null);
+      setExpandedWeek(plans[plans.length - 1]?.weekNumber || null);
 
+      // 2) Fetch user info
       const user = await fetchUser(userId);
       setCompletedWeeks(user.completedWeeks || []);
 
+      // 3) Fetch weight history
       const weight = await fetchWeightHistory();
       setWeightHistory(weight.weightHistory || []);
 
+      // 4) Fetch progress photos
       const photos = await fetchPhotos();
       setProgressPhotos(photos.progressPhotos || {});
+
+      const exercises = await fetchExercises();
+      const map = {};
+      exercises.forEach((ex) => (map[ex._id] = ex));
+      setExerciseMap(map);
     };
 
     load();
@@ -71,29 +84,25 @@ function Dashboard() {
   }, [showModal]);
 
   useEffect(() => {
-    loadSteps();
+    fetchSteps()
+      .then((data) => setStepsData(data))
+      .catch((err) => console.error(err));
   }, []);
 
-  // -----------------------------
-  // DAY TOGGLE
-  // -----------------------------
   const toggleDay = (dayName) => {
-    setExpandedDays((prev) => toggleDayState(prev, dayName));
+    setExpandedDays((prev) => ({
+      ...prev,
+      [dayName]: !prev[dayName],
+    }));
   };
 
-  // -----------------------------
-  // SAVE EXERCISE
-  // -----------------------------
-  const saveExerciseHandler = async (weeklyPlanId, dayName, exercise) => {
-    const data = userInput[exercise._id];
+  const saveExerciseHandler = async (weeklyPlanId, dayName, exerciseId) => {
+    const data = userInput[exerciseId];
     if (!data) return;
 
-    await saveExercise(weeklyPlanId, dayName, exercise._id, data);
+    await saveExercise(weeklyPlanId, dayName, exerciseId, data);
   };
 
-  // -----------------------------
-  // FEEDBACK + COMPLETE WEEK
-  // -----------------------------
   const sendFeedback = async (e) => {
     e.preventDefault();
     const feedback = e.target.feedback.value;
@@ -107,9 +116,6 @@ function Dashboard() {
     setFeedbackWeek(null);
   };
 
-  // -----------------------------
-  // WEIGHT SUBMIT
-  // -----------------------------
   const handleWeightSubmit = async (e) => {
     e.preventDefault();
 
@@ -121,9 +127,6 @@ function Dashboard() {
     }
   };
 
-  // -----------------------------
-  // PHOTO UPLOAD
-  // -----------------------------
   const handlePhotoUpload = async (e, position) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -144,6 +147,15 @@ function Dashboard() {
     }
   };
 
+  const loadSteps = async () => {
+    try {
+      const data = await fetchSteps();
+      setStepsData(data || []);
+    } catch (err) {
+      console.error("Error loading steps:", err);
+    }
+  };
+
   const scrollPhoto = (position, direction) => {
     const photos = progressPhotos[position] || [];
     const current = photoIndex[position];
@@ -155,39 +167,33 @@ function Dashboard() {
     setPhotoIndex((prev) => ({ ...prev, [position]: next }));
   };
 
-  const loadSteps = () =>
-    fetchSteps()
-      .then((data) => setStepsData(data))
-      .catch((err) => console.error(err));
-
-  // -----------------------------
-  // RENDER
-  // -----------------------------
-  if (weeklyPlans === null) return <p>Učitavanje...</p>;
-  //if (weeklyPlans.length === 0) return <p>Nema dostupnih planova.</p>;
+  if (!weeklyPlans) return <p>Učitavanje...</p>;
 
   return (
     <>
       <div className="dashboard">
+        {/* LEFT ASIDE */}
         <div className="aside-dropdown">
           <div
             className="aside-header"
             onClick={() => setShowVideoAside(!showVideoAside)}
           >
             <h3>Dodatan sadržaj {showVideoAside ? "▲" : "▼"}</h3>
-          </div>{" "}
+          </div>
+
           {showVideoAside && (
             <UserVideoExerciseAside
               setShowModal={setShowModal}
               setSelectedCategory={setSelectedCategory}
             />
-          )}{" "}
+          )}
         </div>
 
+        {/* MAIN */}
         <main className="main-view">
           <h2>Tvoji tjedni planovi</h2>
-          {console.log("weeklyPlans:", weeklyPlans)}
-          {weeklyPlans.map((plan) => {
+
+          {(weeklyPlans || []).map((plan) => {
             const isExpanded = expandedWeek === plan.weekNumber;
             const isCompleted = completedWeeks.includes(plan.weekNumber);
 
@@ -203,10 +209,10 @@ function Dashboard() {
                   <span>Tjedan {plan.weekNumber}</span>
                   <span className="arrow">{isExpanded ? "▲" : "▼"}</span>
                 </div>
-                {/* WEEK CONTENT */}{" "}
+
+                {/* WEEK CONTENT */}
                 {isExpanded && (
                   <div className="week-content">
-                    {" "}
                     {(plan.days ?? []).map((day, idx) => {
                       const isDayOpen = expandedDays[day.day];
 
@@ -226,111 +232,129 @@ function Dashboard() {
                           {/* DAY CONTENT */}
                           {isDayOpen && (
                             <div className="day-content">
-                              {day.exercises.map((ex) => (
-                                <div className="exercise" key={ex._id}>
-                                  <h4>{ex.name}</h4>
-                                  {console.log(ex.youtubeLink)}
-                                  {ex.youtubeLink && (
-                                    <iframe
-                                      width="100%"
-                                      height="200"
-                                      src={getEmbedUrl(ex.youtubeLink)}
-                                      title={ex.name}
-                                      frameBorder="0"
-                                      allowFullScreen
-                                    ></iframe>
-                                  )}
+                              {day.exercises.map((ex) => {
+                                const exercise = exerciseMap[ex.exerciseId];
 
-                                  <p>
-                                    <strong>Bilješke trenera:</strong>{" "}
-                                    {ex.trainerNotes || "—"}
-                                  </p>
+                                if (!exercise) {
+                                  return (
+                                    <div key={ex.exerciseId}>
+                                      Nepoznata vježba (ID: {ex.exerciseId})
+                                    </div>
+                                  );
+                                }
 
-                                  <div className="planned">
+                                return (
+                                  <div className="exercise" key={ex.exerciseId}>
+                                    <h4>{exercise.name}</h4>
+
+                                    {exercise.youtubeLink && (
+                                      <iframe
+                                        width="100%"
+                                        height="200"
+                                        src={getEmbedUrl(exercise.youtubeLink)}
+                                        title={exercise.name}
+                                        frameBorder="0"
+                                        allowFullScreen
+                                      ></iframe>
+                                    )}
+
                                     <p>
-                                      <strong>Planirano:</strong>
-                                    </p>
-                                    <p>Serije: {ex.plannedSets}</p>
-                                    <p>Ponavljanja: {ex.plannedReps}</p>
-                                    <p>Kilaža: {ex.plannedWeight} kg</p>
-                                  </div>
-
-                                  <div className="actual">
-                                    <p>
-                                      <strong>Odrađeno:</strong>
+                                      <strong>Bilješke trenera:</strong>{" "}
+                                      {exercise.notes || "—"}
                                     </p>
 
-                                    <input
-                                      type="number"
-                                      placeholder="Serije"
-                                      value={
-                                        userInput[ex._id]?.actualSets || ""
-                                      }
-                                      onChange={(e) =>
-                                        setUserInput((prev) => ({
-                                          ...prev,
-                                          [ex._id]: {
-                                            ...prev[ex._id],
-                                            actualSets: e.target.value,
-                                          },
-                                        }))
-                                      }
-                                    />
+                                    {/* PLANIRANO */}
+                                    <div className="planned">
+                                      <p>
+                                        <strong>Planirano:</strong>
+                                      </p>
+                                      <p>Serije: {exercise.sets ?? "—"}</p>
+                                      <p>Ponavljanja: {exercise.reps ?? "—"}</p>
+                                      <p>Kilaža: {exercise.weight ?? "—"} kg</p>
+                                    </div>
 
-                                    <input
-                                      type="number"
-                                      placeholder="Ponavljanja"
-                                      value={
-                                        userInput[ex._id]?.actualReps || ""
-                                      }
-                                      onChange={(e) =>
-                                        setUserInput((prev) => ({
-                                          ...prev,
-                                          [ex._id]: {
-                                            ...prev[ex._id],
-                                            actualReps: e.target.value,
-                                          },
-                                        }))
-                                      }
-                                    />
+                                    {/* ODRAĐENO */}
+                                    <div className="actual">
+                                      <p>
+                                        <strong>Odrađeno:</strong>
+                                      </p>
 
-                                    <input
-                                      type="number"
-                                      placeholder="Kilaža"
-                                      value={
-                                        userInput[ex._id]?.actualWeight || ""
-                                      }
-                                      onChange={(e) =>
-                                        setUserInput((prev) => ({
-                                          ...prev,
-                                          [ex._id]: {
-                                            ...prev[ex._id],
-                                            actualWeight: e.target.value,
-                                          },
-                                        }))
-                                      }
-                                    />
+                                      <input
+                                        type="number"
+                                        placeholder="Serije"
+                                        value={
+                                          userInput[ex.exerciseId]
+                                            ?.actualSets || ""
+                                        }
+                                        onChange={(e) =>
+                                          setUserInput((prev) => ({
+                                            ...prev,
+                                            [ex.exerciseId]: {
+                                              ...prev[ex.exerciseId],
+                                              actualSets: e.target.value,
+                                            },
+                                          }))
+                                        }
+                                      />
 
-                                    <button
-                                      className="save-btn"
-                                      onClick={() =>
-                                        saveExerciseHandler(
-                                          plan._id,
-                                          day.day,
-                                          ex,
-                                        )
-                                      }
-                                    >
-                                      Spremi
-                                    </button>
+                                      <input
+                                        type="number"
+                                        placeholder="Ponavljanja"
+                                        value={
+                                          userInput[ex.exerciseId]
+                                            ?.actualReps || ""
+                                        }
+                                        onChange={(e) =>
+                                          setUserInput((prev) => ({
+                                            ...prev,
+                                            [ex.exerciseId]: {
+                                              ...prev[ex.exerciseId],
+                                              actualReps: e.target.value,
+                                            },
+                                          }))
+                                        }
+                                      />
+
+                                      <input
+                                        type="number"
+                                        placeholder="Kilaža"
+                                        value={
+                                          userInput[ex.exerciseId]
+                                            ?.actualWeight || ""
+                                        }
+                                        onChange={(e) =>
+                                          setUserInput((prev) => ({
+                                            ...prev,
+                                            [ex.exerciseId]: {
+                                              ...prev[ex.exerciseId],
+                                              actualWeight: e.target.value,
+                                            },
+                                          }))
+                                        }
+                                      />
+
+                                      <button
+                                        className="save-btn"
+                                        onClick={() =>
+                                          saveExerciseHandler(
+                                            plan._id,
+                                            day.day,
+                                            ex.exerciseId,
+                                          )
+                                        }
+                                      >
+                                        Spremi
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
                       );
                     })}
+
                     {!isCompleted && (
                       <button
                         className="finish-week-btn"
@@ -339,6 +363,7 @@ function Dashboard() {
                         Tjedan završen
                       </button>
                     )}
+
                     {isCompleted && <span className="checkmark">✔</span>}
                   </div>
                 )}
@@ -367,6 +392,7 @@ function Dashboard() {
           )}
         </main>
 
+        {/* RIGHT ASIDE */}
         {!showModal && (
           <div className="aside-dropdown">
             <div
@@ -375,10 +401,11 @@ function Dashboard() {
             >
               <h3>Praćenje napretka {showProgressAside ? "▲" : "▼"}</h3>
             </div>
+
             {showProgressAside && (
               <UserProgressAside
                 stepsData={stepsData}
-                fetchSteps={fetchSteps}
+                loadSteps={loadSteps}
                 weightInput={weightInput}
                 setWeightInput={setWeightInput}
                 weightHistory={weightHistory}
@@ -388,10 +415,11 @@ function Dashboard() {
                 scrollPhoto={scrollPhoto}
                 photoIndex={photoIndex}
               />
-            )}{" "}
+            )}
           </div>
         )}
       </div>
+
       {showModal && (
         <ExerciseModal
           category={selectedCategory}

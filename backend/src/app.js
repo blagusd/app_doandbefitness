@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 const progressRoutes = require("./routes/progressRoutes");
 const exerciseRoutes = require("./routes/exerciseRoutes");
-const planRoutes = require("./routes/planRoutes");
 const userRoutes = require("./routes/userRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const weeklyPlanRoutes = require("./routes/weeklyPlanRoutes");
@@ -16,10 +15,6 @@ const securityMiddleware = require("./middleware/securityMiddleware");
 const { swaggerUi, specs } = require("./config/swagger");
 
 const app = express();
-console.log(
-  "Using progressRoutes from:",
-  require.resolve("./routes/progressRoutes"),
-);
 
 app.use(
   "/uploads",
@@ -43,7 +38,6 @@ mongoose
 app.use("/auth", authRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/exercises", exerciseRoutes);
-app.use("/api/plans", planRoutes);
 app.use("/auth", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/weekly-plan", weeklyPlanRoutes);

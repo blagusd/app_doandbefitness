@@ -7,20 +7,27 @@ require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
 const { sendEmail } = require("../config/email");
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
     const { fullName, email, password } = req.body;
 
-    // Check does the user exist
     const existingUser = await User.findOne({ email });
     if (existingUser) return next(new AppError("⚠️ Email already exists", 401));
 
-    // Hash the password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
     const newUser = new User({ fullName, email, passwordHash });
     await newUser.save();
+
+    await sendEmail(
+      email,
+      "Welcome to Do&BE Fitness!",
+      `
+        <h2>Welcome, ${fullName}!</h2>
+        <p>Your account has been successfully created.</p>
+        <p>You can now log in and start your fitness journey.</p>
+      `,
+    );
 
     res.status(201).json({ message: "🟢 User created", userId: newUser._id });
   } catch (err) {
@@ -74,7 +81,7 @@ const forgotPassword = async (req, res, next) => {
     await sendEmail(
       user.email,
       "Password reset - Do&BEFitness",
-      `<p>Click link for password reset:</p><a href="${resetLink}">${resetLink}</a>`
+      `<p>Click link for password reset:</p><a href="${resetLink}">${resetLink}</a>`,
     );
 
     res.status(200).json({ message: `Reset link sent to ${email}` });

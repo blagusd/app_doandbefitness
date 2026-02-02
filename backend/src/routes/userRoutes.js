@@ -5,20 +5,10 @@ const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 const multer = require("multer");
 const path = require("path");
 
-/**
- * @swagger
- * tags:
- *   name: Users
- *   description: User management (admin only)
- */
-
-/**
- * GET /auth/users
- * Admin: get all users
- */
 router.get("/users", authMiddleware, requireRole("admin"), async (req, res) => {
   try {
-    const users = await User.find().populate("weeklyPlans");
+    const users = await User.find();
+
     res.json(users);
   } catch (err) {
     res.status(500).json({
@@ -28,10 +18,6 @@ router.get("/users", authMiddleware, requireRole("admin"), async (req, res) => {
   }
 });
 
-/**
- * GET /auth/user/:id
- * Fetch single user (used by Dashboard)
- */
 router.get("/user/:id", authMiddleware, async (req, res) => {
   try {
     const userId = req.params.id;
@@ -62,10 +48,6 @@ router.get("/user/:id", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * POST /auth/complete-week/:userId/:weekNumber
- * Mark week completed
- */
 router.post(
   "/complete-week/:userId/:weekNumber",
   authMiddleware,
@@ -224,5 +206,16 @@ router.get(
     }
   },
 );
+
+router.put("/:id", async (req, res) => {
+  try {
+    const updated = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Error updating user" });
+  }
+});
 
 module.exports = router;

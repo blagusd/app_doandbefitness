@@ -18,3 +18,16 @@ export const fetchUserPlans = async (userId) => {
   });
   return res.json();
 };
+
+export const updateUser = async (id, data) => {
+  const res = await fetch(`http://localhost:5000/auth/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  return res.json();
+};

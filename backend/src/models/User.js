@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   weeklyPlans: [{ type: mongoose.Schema.Types.ObjectId, ref: "Plan" }],
   completedWeeks: { type: [Number], default: [] },
+  planDays: { type: Number, default: 3 },
   progressEntries: [
     {
       exerciseId: { type: mongoose.Schema.Types.ObjectId, ref: "Exercise" },

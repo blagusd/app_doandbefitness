@@ -27,7 +27,6 @@ function RegisterModal({ onClose }) {
       }
 
       const result = await response.json();
-      alert("Registration request sent! Please wait for approval.");
       onClose();
     } catch (error) {
       alert("Error registering: " + error.message);

@@ -5,7 +5,7 @@ import StepsChart from "../views/StepsChart";
 function UserProgressAside({
   token,
   stepsData,
-  fetchSteps,
+  loadSteps,
   weightInput,
   setWeightInput,
   weightHistory,
@@ -23,7 +23,7 @@ function UserProgressAside({
       <div className="steps-section">
         <h4>Koraci</h4>
 
-        <StepsForm onSaved={fetchSteps} token={token} />
+        <StepsForm onSaved={loadSteps} token={token} />
 
         <div className="chart-container">
           <StepsChart data={stepsData} />

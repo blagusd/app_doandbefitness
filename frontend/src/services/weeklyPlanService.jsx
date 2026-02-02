@@ -1,21 +1,48 @@
-export const fetchWeeklyPlan = async (userId) => {
-  const res = await fetch(`http://localhost:5000/api/weekly-plan/${userId}`, {
+const API = "http://localhost:5000/api/weekly-plan";
+
+export const fetchUserWeeklyPlans = async (userId) => {
+  const res = await fetch(`${API}/${userId}`, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
   return res.json();
 };
 
-export const fetchUserWeeklyPlans = async (userId) => {
-  const res = await fetch(`http://localhost:5000/api/weekly-plan/${userId}`, {
+export const fetchWeeklyPlanForWeek = async (userId, weekNumber) => {
+  const res = await fetch(`${API}/${userId}/${weekNumber}`, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
+  return res.json();
+};
+
+export const saveWeeklyPlan = async (payload) => {
+  const res = await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return res.json();
+};
+
+export const deleteWeeklyPlan = async (userId, weekNumber) => {
+  const res = await fetch(`${API}/${userId}/${weekNumber}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+
   return res.json();
 };
 
 export const saveExercise = async (planId, day, exId, data) => {
-  return fetch("http://localhost:5000/api/weekly-plan/update-exercise", {
+  const res = await fetch(`${API}/update-exercise`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
     body: JSON.stringify({
       weeklyPlanId: planId,
       day,
@@ -25,4 +52,6 @@ export const saveExercise = async (planId, day, exId, data) => {
       weight: data.actualWeight,
     }),
   });
+
+  return res.json();
 };

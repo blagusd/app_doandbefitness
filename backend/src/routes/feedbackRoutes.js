@@ -23,8 +23,8 @@ router.post("/send-feedback", authMiddleware, async (req, res, next) => {
 
     await sendEmail(
       process.env.FEEDBACK_EMAIL,
-      `Feedback od ${user.fullName} — Tjedan ${week}`,
-      html
+      `Feedback od ${user.fullName} - Tjedan ${week}`,
+      html,
     );
 
     res.status(200).json({ message: "Feedback poslan!" });

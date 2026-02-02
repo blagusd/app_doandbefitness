@@ -1,40 +1,34 @@
 import "./AdminDashView.css";
 import { useEffect, useState } from "react";
 
-// SERVICES
-import { fetchUsers } from "../services/userService";
+import { fetchUsers, updateUser } from "../services/userService";
 import { fetchExercises, createExercise } from "../services/exerciseService";
-import {
-  fetchPlanForWeek,
-  savePlanService,
-  assignWeeklyPlan,
-  deletePlanService,
-} from "../services/planService";
 import { fetchWeightHistoryAdmin } from "../services/weightService";
 import { fetchPhotosAdmin } from "../services/photoService";
 import { fetchStepsAdmin } from "../services/stepsService";
-import { fetchUserWeeklyPlans } from "../services/weeklyPlanService";
+import {
+  fetchUserWeeklyPlans,
+  fetchWeeklyPlanForWeek,
+  saveWeeklyPlan,
+  deleteWeeklyPlan,
+} from "../services/weeklyPlanService";
 
-// UTILS
 import {
   addExerciseToDayUtil,
   removeExerciseFromDayUtil,
+  normalizeDays,
 } from "../utils/dayUtils";
-import { getEmbedUrl } from "../utils/youtube";
 
-// COMPONENTS
 import AdminProgressAside from "../components/AdminProgressAside";
 
 function AdminDashboard() {
-  // -----------------------------
-  // STATE
-  // -----------------------------
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [weekNumber, setWeekNumber] = useState(1);
   const [weekDays, setWeekDays] = useState([]);
   const [exerciseMap, setExerciseMap] = useState({});
   const [userPlans, setUserPlans] = useState([]);
+
   const [exerciseForm, setExerciseForm] = useState({
     name: "",
     youtubeLink: "",
@@ -45,7 +39,6 @@ function AdminDashboard() {
     weight: "",
   });
 
-  // READ‑ONLY PROGRESS ASIDE
   const [weightHistory, setWeightHistory] = useState([]);
   const [progressPhotos, setProgressPhotos] = useState({});
   const [photoIndex, setPhotoIndex] = useState({
@@ -66,9 +59,6 @@ function AdminDashboard() {
     setPhotoIndex((prev) => ({ ...prev, [position]: next }));
   };
 
-  // -----------------------------
-  // LOAD USERS + EXERCISES
-  // -----------------------------
   useEffect(() => {
     const load = async () => {
       const usersData = await fetchUsers();
@@ -83,9 +73,6 @@ function AdminDashboard() {
     load();
   }, []);
 
-  // -----------------------------
-  // LOAD WEEK DATA WHEN USER / WEEK OR USERPLANS CHANGE
-  // -----------------------------
   useEffect(() => {
     if (!selectedUser) return;
 
@@ -93,32 +80,34 @@ function AdminDashboard() {
       const weeklyPlan = userPlans.find((p) => p.weekNumber === weekNumber);
 
       if (weeklyPlan) {
-        setWeekDays(weeklyPlan.days || []);
+        setWeekDays(normalizeDays(weeklyPlan.days));
         return;
       }
 
-      const res = await fetchPlanForWeek(selectedUser._id, weekNumber);
+      const res = await fetchWeeklyPlanForWeek(selectedUser._id, weekNumber);
 
-      if (res.status === 404) {
+      if (!res || res.message === "Not found") {
         const numDays = selectedUser.planDays || 3;
         const days = Array.from({ length: numDays }, (_, i) => ({
           day: `Dan ${i + 1}`,
           exercises: [],
         }));
-        setWeekDays(days);
+        setWeekDays(normalizeDays(days));
         return;
       }
 
-      const plan = await res.json();
-      setWeekDays(plan.workouts || []);
+      setWeekDays(normalizeDays(res.days));
     };
 
     loadWeek();
   }, [selectedUser, weekNumber, userPlans]);
 
-  // -----------------------------
-  // FETCH STEPS FOR SELECTED USER
-  // -----------------------------
+  useEffect(() => {
+    if (!selectedUser) return;
+    setWeekDays([]);
+    setWeekNumber(1);
+  }, [selectedUser]);
+
   const fetchUserSteps = async (userId) => {
     if (!userId) return;
     const steps = await fetchStepsAdmin(userId);
@@ -131,9 +120,6 @@ function AdminDashboard() {
     }
   }, [selectedUser]);
 
-  // -----------------------------
-  // SELECT USER
-  // -----------------------------
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
     setWeekNumber(1);
@@ -149,33 +135,30 @@ function AdminDashboard() {
 
     const steps = await fetchStepsAdmin(user._id);
     setStepsData(steps || []);
-
-    console.log("Photos for user:", user.fullName, photos.progressPhotos);
   };
 
-  // -----------------------------
-  // CREATE EXERCISE
-  // -----------------------------
   const handleCreateExercise = async () => {
     const newExercise = await createExercise(exerciseForm);
 
-    const exercises = await fetchExercises();
-    const map = {};
-    exercises.forEach((ex) => (map[ex._id] = ex));
-    setExerciseMap(map);
+    setExerciseMap((prev) => ({
+      ...prev,
+      [newExercise._id]: newExercise,
+    }));
 
     return newExercise._id;
   };
 
-  // -----------------------------
-  // ADD EXERCISE TO DAY
-  // -----------------------------
   const addExerciseToDay = async (dayIndex) => {
     if (!exerciseForm.name) return;
 
     const exerciseId = await handleCreateExercise();
 
-    const updated = addExerciseToDayUtil(weekDays, dayIndex, exerciseId);
+    const updated = addExerciseToDayUtil(
+      normalizeDays(weekDays),
+      dayIndex,
+      exerciseId,
+    );
+
     setWeekDays(updated);
 
     setExerciseForm({
@@ -189,62 +172,71 @@ function AdminDashboard() {
     });
   };
 
-  // -----------------------------
-  // REMOVE EXERCISE
-  // -----------------------------
   const removeExerciseFromDay = (dayIndex, exIndex) => {
     const updated = removeExerciseFromDayUtil(weekDays, dayIndex, exIndex);
     setWeekDays(updated);
   };
 
-  // -----------------------------
-  // SAVE PLAN + ASSIGN WEEKLYPLAN
-  // -----------------------------
   const savePlan = async () => {
     if (!selectedUser) return;
 
     const payload = {
-      name: `${selectedUser.fullName} – Tjedan ${weekNumber}`,
+      userId: selectedUser._id,
       weekNumber,
-      assignedTo: selectedUser._id,
-      workouts: weekDays,
+      days: weekDays,
     };
 
-    const savedPlan = await savePlanService(payload);
-    const assignRes = await assignWeeklyPlan(selectedUser._id, savedPlan._id);
-
-    if (!assignRes.ok) {
-      alert("Plan spremljen, ali WeeklyPlan nije kreiran.");
-      return;
-    }
+    await saveWeeklyPlan(payload);
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
-    setUserPlans(Array.isArray(plans) ? plans : []);
+    setUserPlans(plans);
 
-    alert("Plan uspješno spremljen i dodijeljen korisniku!");
+    alert("Tjedni plan spremljen!");
   };
 
-  // -----------------------------
-  // DELETE PLAN
-  // -----------------------------
   const deletePlan = async () => {
     if (!selectedUser) return;
 
-    const res = await deletePlanService(selectedUser._id, weekNumber);
+    const res = await deleteWeeklyPlan(selectedUser._id, weekNumber);
 
-    if (res.ok) {
-      alert("Plan obrisan");
+    if (res.success) {
+      alert("Tjedni plan obrisan!");
       setWeekDays([]);
+
       const plans = await fetchUserWeeklyPlans(selectedUser._id);
-      setUserPlans(Array.isArray(plans) ? plans : []);
+      setUserPlans(plans);
     } else {
-      alert("Plan nije pronađen");
+      alert("Plan nije pronađen.");
     }
   };
 
-  // -----------------------------
-  // RENDER
-  // -----------------------------
+  const increasePlanDays = async () => {
+    const newValue = selectedUser.planDays + 1;
+
+    await updateUser(selectedUser._id, { planDays: newValue });
+
+    setSelectedUser({ ...selectedUser, planDays: newValue });
+
+    setWeekDays((prev) =>
+      normalizeDays([
+        ...prev,
+        { day: `Dan ${prev.length + 1}`, exercises: [] },
+      ]),
+    );
+  };
+
+  const decreasePlanDays = async () => {
+    if (selectedUser.planDays <= 1) return;
+
+    const newValue = selectedUser.planDays - 1;
+
+    await updateUser(selectedUser._id, { planDays: newValue });
+
+    setSelectedUser({ ...selectedUser, planDays: newValue });
+
+    setWeekDays((prev) => normalizeDays(prev.slice(0, -1)));
+  };
+
   return (
     <div className="admin-dashboard">
       {/* SIDEBAR */}
@@ -273,7 +265,7 @@ function AdminDashboard() {
             <section className="client-summary">
               <h2>{selectedUser.fullName}</h2>
               <p>Email: {selectedUser.email}</p>
-              <p>Planova: {userPlans.length}</p>
+              <p>Broj tjednih planova: {userPlans.length}</p>
             </section>
 
             {/* WEEK BUILDER */}
@@ -284,6 +276,14 @@ function AdminDashboard() {
                   <span className="week-done"> ✔ Tjedan završen</span>
                 )}
               </h3>
+
+              <div className="day-controls">
+                <button onClick={increasePlanDays}>➕ Dodaj dan</button>
+
+                {selectedUser.planDays > 1 && (
+                  <button onClick={decreasePlanDays}>➖ Ukloni dan</button>
+                )}
+              </div>
 
               <label>
                 Tjedan:
@@ -301,6 +301,7 @@ function AdminDashboard() {
                   onClick={() => {
                     const nextWeek =
                       (userPlans[userPlans.length - 1]?.weekNumber || 0) + 1;
+
                     setWeekNumber(nextWeek);
 
                     const numDays = selectedUser.planDays || 3;
@@ -327,18 +328,12 @@ function AdminDashboard() {
                     ) : (
                       <ul>
                         {day.exercises.map((exItem, i) => {
-                          const ex =
-                            typeof exItem === "string"
-                              ? exerciseMap[exItem]
-                              : exItem;
+                          const exercise = exerciseMap[exItem.exerciseId];
 
-                          if (!ex) {
+                          if (!exercise) {
                             return (
                               <li key={i}>
-                                Nepoznata vježba:{" "}
-                                {typeof exItem === "string"
-                                  ? exItem
-                                  : exItem?._id}
+                                Nepoznata vježba (ID: {exItem.exerciseId})
                               </li>
                             );
                           }
@@ -346,38 +341,42 @@ function AdminDashboard() {
                           return (
                             <li key={i}>
                               <p>
-                                <strong>Naziv:</strong> {ex.name}
+                                <strong>Naziv:</strong> {exercise.name}
                               </p>
                               <p>
                                 <strong>Mišićna skupina:</strong>{" "}
-                                {ex.muscleGroup || "—"}
+                                {exercise.muscleGroup || "—"}
                               </p>
                               <p>
-                                <strong>Bilješke:</strong> {ex.notes || "—"}
+                                <strong>Bilješke:</strong>{" "}
+                                {exercise.notes || "—"}
                               </p>
 
                               {/* PLANIRANO */}
                               <p>
                                 <strong>Planirano:</strong>
                               </p>
-                              <p>Serije: {ex.plannedSets ?? "—"}</p>
-                              <p>Ponavljanja: {ex.plannedReps ?? "—"}</p>
-                              <p>Kilaža: {ex.plannedWeight ?? "—"} kg</p>
+                              <p>Serije: {exercise.sets ?? "—"}</p>
+                              <p>Ponavljanja: {exercise.reps ?? "—"}</p>
+                              <p>Kilaža: {exercise.weight ?? "—"} kg</p>
 
                               {/* ODRAĐENO */}
                               <p>
                                 <strong>Odrađeno:</strong>
                               </p>
-                              <p>Serije: {ex.actualSets ?? "—"}</p>
-                              <p>Ponavljanja: {ex.actualReps ?? "—"}</p>
-                              <p>Kilaža: {ex.actualWeight ?? "—"} kg</p>
+                              <p>Serije: {exItem.actualSets ?? "—"}</p>
+                              <p>Ponavljanja: {exItem.actualReps ?? "—"}</p>
+                              <p>Kilaža: {exItem.actualWeight ?? "—"} kg</p>
 
-                              {ex.youtubeLink && (
+                              {exercise.youtubeLink && (
                                 <iframe
                                   width="100%"
                                   height="200"
-                                  src={getEmbedUrl(ex.youtubeLink)}
-                                  title={ex.name}
+                                  src={exercise.youtubeLink.replace(
+                                    "watch?v=",
+                                    "embed/",
+                                  )}
+                                  title={exercise.name}
                                   frameBorder="0"
                                   allowFullScreen
                                 ></iframe>

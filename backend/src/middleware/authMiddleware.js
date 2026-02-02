@@ -3,7 +3,6 @@ const User = require("../models/User");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    console.log("AUTH:", req.headers.authorization);
     const authHeader = req.headers.authorization;
     if (!authHeader)
       return res
@@ -30,7 +29,6 @@ const authMiddleware = async (req, res, next) => {
 
 const requireRole = (role) => {
   return (req, res, next) => {
-    console.log("ROLE CHECK:", req.user);
     if (req.user.role !== role) {
       return res.status(403).json({ message: "🚫 Access denied" });
     }

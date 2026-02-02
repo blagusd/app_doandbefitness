@@ -24,10 +24,6 @@ router.post(
   authMiddleware,
   requireRole("client"),
   async (req, res) => {
-    console.log("POST /steps HIT");
-    console.log("req.user:", req.user);
-    console.log("req.body:", req.body);
-
     try {
       const { steps } = req.body;
       const userId = req.user.id;
@@ -78,8 +74,6 @@ router.get(
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      console.log("Fetching steps for user:", user._id);
-      console.log("StepsHistory returned:", user.stepsHistory);
 
       res.json(user.stepsHistory || []);
     } catch (err) {
