@@ -18,8 +18,8 @@ const ExerciseForm = ({ category, onSuccess, editingVideo }) => {
     const payload = { title, youtubeUrl, category };
     const method = editingVideo ? "PUT" : "POST";
     const url = editingVideo
-      ? `http://localhost:5000/exercise-videos/${editingVideo._id}`
-      : `http://localhost:5000/exercise-videos/`;
+      ? `${import.meta.env.VITE_API_BASE_URL}/exercise-videos/${editingVideo._id}`
+      : `${import.meta.env.VITE_API_BASE_URL}/exercise-videos/`;
 
     await fetch(url, {
       method,

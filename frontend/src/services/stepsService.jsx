@@ -1,5 +1,5 @@
 export const fetchSteps = () =>
-  fetch("http://localhost:5000/api/progress/steps", {
+  fetch(`${import.meta.env.VITE_API_BASE_URL}/api/progress/steps`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
@@ -10,7 +10,7 @@ export const fetchSteps = () =>
 
 export const fetchStepsAdmin = async (userId) => {
   const res = await fetch(
-    `http://localhost:5000/api/progress/steps/${userId}`,
+    `${import.meta.env.VITE_API_BASE_URL}/api/progress/steps/${userId}`,
     {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     },

@@ -1,4 +1,4 @@
-const API = "http://localhost:5000/api/exercises";
+const API = `${import.meta.env.VITE_API_BASE_URL}/api/exercises`;
 
 export const fetchExercises = async () => {
   const res = await fetch(API, {

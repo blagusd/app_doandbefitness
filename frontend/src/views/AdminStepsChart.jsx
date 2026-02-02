@@ -7,7 +7,7 @@ function AdminStepsChart({ userId, token }) {
   const fetchUserSteps = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/progress/steps/user/${userId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/progress/steps/user/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

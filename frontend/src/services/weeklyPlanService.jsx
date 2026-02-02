@@ -1,4 +1,4 @@
-const API = "http://localhost:5000/api/weekly-plan";
+const API = `${import.meta.env.VITE_API_BASE_URL}/api/weekly-plan`;
 
 export const fetchUserWeeklyPlans = async (userId) => {
   const res = await fetch(`${API}/${userId}`, {

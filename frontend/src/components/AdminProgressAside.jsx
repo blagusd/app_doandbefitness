@@ -35,7 +35,7 @@ function AdminProgressAside({
             const currentPhotoUrl = currentPhoto
               ? currentPhoto.startsWith("http")
                 ? currentPhoto
-                : `http://localhost:5000${currentPhoto}`
+                : `${import.meta.env.VITE_API_BASE_URL}${currentPhoto}`
               : null;
 
             return (

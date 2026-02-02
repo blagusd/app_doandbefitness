@@ -7,14 +7,17 @@ function StepsForm({ onSaved }) {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/progress/steps", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/progress/steps`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ steps: Number(steps) }),
         },
-        body: JSON.stringify({ steps: Number(steps) }),
-      });
+      );
 
       if (!res.ok) {
         console.error("Greška pri spremanju koraka:", res.status);

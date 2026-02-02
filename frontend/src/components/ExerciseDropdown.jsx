@@ -11,7 +11,7 @@ const ExerciseDropdown = ({ category, isAdmin }) => {
   const fetchVideos = async () => {
     const token = localStorage.getItem("token");
     const res = await fetch(
-      `http://localhost:5000/exercise-videos/${category}`,
+      `${import.meta.env.VITE_API_BASE_URL}/exercise-videos/${category}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -26,7 +26,7 @@ const ExerciseDropdown = ({ category, isAdmin }) => {
 
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
-    await fetch(`http://localhost:5000/exercise-videos/${id}`, {
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/exercise-videos/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
