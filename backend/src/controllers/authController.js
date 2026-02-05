@@ -19,15 +19,11 @@ const register = async (req, res, next) => {
     const newUser = new User({ fullName, email, passwordHash });
     await newUser.save();
 
-    await sendEmail(
-      email,
-      "Welcome to Do&BE Fitness!",
-      `
-        <h2>Welcome, ${fullName}!</h2>
-        <p>Your account has been successfully created.</p>
-        <p>You can now log in and start your fitness journey.</p>
-      `,
-    );
+    await sendEmail({
+      to: email,
+      subject: "Welcome to Do&BEFitness!",
+      html: `<p>Hi ${fullName}, welcome to the platform! 🎉</p>`,
+    });
 
     res.status(201).json({ message: "🟢 User created", userId: newUser._id });
   } catch (err) {

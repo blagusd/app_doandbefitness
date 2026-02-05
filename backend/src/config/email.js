@@ -1,28 +1,25 @@
-const nodemailer = require("nodemailer");
+const Brevo = require("@getbrevo/brevo");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const apiInstance = new Brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(
+  Brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY,
+);
 
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("SMTP ERROR:", err);
-  } else {
-    console.log("SMTP CONNECTED");
+const sendEmail = async ({ to, subject, html }) => {
+  try {
+    const sendSmtpEmail = {
+      sender: { name: "Do&BEFitness", email: "doandbefitness@gmail.com" },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    };
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log("Email sent successfully");
+  } catch (error) {
+    console.error("Email sending failed:", error);
   }
-});
-
-exports.sendEmail = async (to, subject, html) => {
-  await transporter.sendMail({
-    from: "doandbefitness@gmail.com",
-    to,
-    subject,
-    html,
-  });
 };
+
+module.exports = sendEmail;
