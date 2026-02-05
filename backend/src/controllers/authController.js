@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
-const { sendEmail } = require("../config/email");
+const sendEmail = require("../config/email");
 
 const register = async (req, res, next) => {
   try {
