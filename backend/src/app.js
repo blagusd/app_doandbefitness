@@ -24,14 +24,16 @@ app.use(
     },
   }),
 );
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "https://appdoandbefitness.netlify.app"],
-    credentials: true,
-  }),
-);
-
-app.use(express.json());
+(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://appdoandbefitness.netlify.app",
+    "https://doandbefitness.com",
+    "https://www.doandbefitness.com",
+  ],
+  credentials: true,
+}),
+  app.use(express.json()));
 securityMiddleware(app);
 
 mongoose
