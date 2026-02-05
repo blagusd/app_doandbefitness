@@ -9,7 +9,7 @@ apiInstance.setApiKey(
 const sendEmail = async ({ to, subject, html }) => {
   try {
     const sendSmtpEmail = {
-      sender: { name: "Do&BEFitness", email: "doandbefitness@gmail.com" },
+      sender: { name: "Do&BEFitness", email: "noreply@doandbefitness.com" },
       to: [{ email: to }],
       subject,
       htmlContent: html,
