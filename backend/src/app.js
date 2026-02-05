@@ -17,23 +17,18 @@ const { swaggerUi, specs } = require("./config/swagger");
 const app = express();
 
 app.use(
-  "/uploads",
-  express.static("uploads", {
-    setHeaders: (res) => {
-      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    },
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://appdoandbefitness.netlify.app",
+      "https://doandbefitness.com",
+      "https://www.doandbefitness.com",
+    ],
+    credentials: true,
   }),
 );
-(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://appdoandbefitness.netlify.app",
-    "https://doandbefitness.com",
-    "https://www.doandbefitness.com",
-  ],
-  credentials: true,
-}),
-  app.use(express.json()));
+
+app.use(express.json());
 securityMiddleware(app);
 
 mongoose
