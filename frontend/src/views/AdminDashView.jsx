@@ -257,6 +257,14 @@ function AdminDashboard() {
     setUserPlans(plans);
   };
 
+  const openFullscreen = (pos, index) => {
+    setFullscreenPhoto({ pos, index });
+  };
+
+  const closeFullscreen = () => {
+    setFullscreenPhoto(null);
+  };
+
   const navigateFullscreen = (direction) => {
     if (!fullscreenPhoto) return;
     const photos = progressPhotos[fullscreenPhoto.pos] || [];
