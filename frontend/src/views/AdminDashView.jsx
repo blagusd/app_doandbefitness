@@ -70,7 +70,9 @@ function AdminDashboard() {
 
       const exercises = await fetchExercises();
       const map = {};
-      exercises.forEach((ex) => (map[ex._id] = ex));
+      if (Array.isArray(exercises)) {
+        exercises.forEach((ex) => (map[ex._id] = ex));
+      }
       setExerciseMap(map);
     };
 
@@ -141,7 +143,17 @@ function AdminDashboard() {
     setWeightHistory(weight.weightHistory || []);
 
     const photos = await fetchPhotosAdmin(user._id);
-    setProgressPhotos(photos.progressPhotos || {});
+    setProgressPhotos({
+      front: Array.isArray(photos.progressPhotos?.front)
+        ? photos.progressPhotos.front
+        : [],
+      side: Array.isArray(photos.progressPhotos?.side)
+        ? photos.progressPhotos.side
+        : [],
+      back: Array.isArray(photos.progressPhotos?.back)
+        ? photos.progressPhotos.back
+        : [],
+    });
 
     const steps = await fetchStepsAdmin(user._id);
     setStepsData(steps || []);
