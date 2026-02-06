@@ -25,6 +25,8 @@ app.use(
       "https://www.doandbefitness.com",
     ],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
 
