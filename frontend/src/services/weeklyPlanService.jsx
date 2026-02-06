@@ -8,10 +8,17 @@ export const fetchUserWeeklyPlans = async (userId) => {
 };
 
 export const fetchWeeklyPlanForWeek = async (userId, weekNumber) => {
-  const res = await fetch(`${API}/${userId}/${weekNumber}`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${API}/weekly-plan/${userId}/${weekNumber}`);
+
+    if (res.status === 404) {
+      return null;
+    }
+
+    return await res.json();
+  } catch (err) {
+    return null;
+  }
 };
 
 export const saveWeeklyPlan = async (payload) => {
