@@ -74,6 +74,8 @@ function AdminDashboard() {
         exercises.forEach((ex) => (map[ex._id] = ex));
       }
       setExerciseMap(map);
+      console.log("usersData:", usersData);
+      console.log("exercises:", exercises);
     };
 
     load();
@@ -157,6 +159,10 @@ function AdminDashboard() {
 
     const steps = await fetchStepsAdmin(user._id);
     setStepsData(steps || []);
+    console.log("plans:", plans);
+    console.log("weight:", weight);
+    console.log("photos:", photos);
+    console.log("steps:", steps);
   };
 
   const handleCreateExercise = async () => {
