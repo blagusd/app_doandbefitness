@@ -24,9 +24,6 @@ exports.createExercise = async (req, res, next) => {
 exports.getAllExercises = async (req, res, next) => {
   try {
     const exercises = await Exercise.find();
-    if (!exercises || exercises.length === 0) {
-      return next(new AppError("✋ Cannot catch the exercises", 404));
-    }
     res.status(200).json(exercises);
   } catch (err) {
     next(err);
