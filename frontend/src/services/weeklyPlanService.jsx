@@ -13,9 +13,7 @@ export const fetchWeeklyPlanForWeek = async (userId, weekNumber) => {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
 
-    if (res.status === 404) {
-      return null;
-    }
+    if (!res.ok) return null;
 
     return await res.json();
   } catch (err) {
