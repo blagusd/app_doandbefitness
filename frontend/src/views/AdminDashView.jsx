@@ -75,7 +75,10 @@ function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!selectedUser) return;
+    if (!selectedUser) {
+      setWeekDays([]);
+      return;
+    }
 
     const loadWeek = async () => {
       const weeklyPlan = userPlans.find((p) => p.weekNumber === weekNumber);
@@ -104,7 +107,12 @@ function AdminDashboard() {
   }, [selectedUser, weekNumber, userPlans]);
 
   useEffect(() => {
-    if (!selectedUser) return;
+    if (!selectedUser) {
+      setWeekDays([]);
+      setWeekNumber(1);
+      return;
+    }
+
     setWeekDays([]);
     setWeekNumber(1);
   }, [selectedUser]);
@@ -150,7 +158,7 @@ function AdminDashboard() {
   };
 
   const addExerciseToDay = async (dayIndex) => {
-    if (!exerciseForm.name) return;
+    if (!exerciseForm.name || !selectedUser) return;
 
     const exerciseId = await handleCreateExercise();
 
@@ -161,6 +169,9 @@ function AdminDashboard() {
     );
 
     setWeekDays(updated);
+
+    const plans = await fetchUserWeeklyPlans(selectedUser._id);
+    setUserPlans(plans);
 
     setExerciseForm({
       name: "",
@@ -192,6 +203,8 @@ function AdminDashboard() {
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
     setUserPlans(plans);
 
+    setWeekDays(normalizeDays(payload.days));
+
     alert("Tjedni plan spremljen!");
   };
 
@@ -212,6 +225,8 @@ function AdminDashboard() {
   };
 
   const increasePlanDays = async () => {
+    if (!selectedUser) return;
+
     const newValue = selectedUser.planDays + 1;
 
     await updateUser(selectedUser._id, { planDays: newValue });
@@ -224,10 +239,13 @@ function AdminDashboard() {
         { day: `Dan ${prev.length + 1}`, exercises: [] },
       ]),
     );
+
+    const plans = await fetchUserWeeklyPlans(selectedUser._id);
+    setUserPlans(plans);
   };
 
   const decreasePlanDays = async () => {
-    if (selectedUser.planDays <= 1) return;
+    if (!selectedUser || selectedUser.planDays <= 1) return;
 
     const newValue = selectedUser.planDays - 1;
 
@@ -236,13 +254,9 @@ function AdminDashboard() {
     setSelectedUser({ ...selectedUser, planDays: newValue });
 
     setWeekDays((prev) => normalizeDays(prev.slice(0, -1)));
-  };
 
-  const openFullscreen = (pos, index) => {
-    setFullscreenPhoto({ pos, index });
-  };
-  const closeFullscreen = () => {
-    setFullscreenPhoto(null);
+    const plans = await fetchUserWeeklyPlans(selectedUser._id);
+    setUserPlans(plans);
   };
 
   const navigateFullscreen = (direction) => {
