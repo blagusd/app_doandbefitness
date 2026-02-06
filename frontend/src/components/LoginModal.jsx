@@ -54,8 +54,9 @@ function LoginModal({ onClose, onLoginSuccess, onRegister, onForgot }) {
       // Notify App.jsx
       onLoginSuccess();
 
-      // Redirect to dashboard
-      navigate("/dashboard");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 50);
     } catch (error) {
       alert("Error logging in: " + error.message);
     }

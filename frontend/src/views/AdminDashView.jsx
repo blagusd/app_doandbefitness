@@ -60,6 +60,9 @@ function AdminDashboard() {
     setPhotoIndex((prev) => ({ ...prev, [position]: next }));
   };
 
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
   useEffect(() => {
     const load = async () => {
       const usersData = await fetchUsers();

@@ -4,6 +4,8 @@ export const fetchExercises = async () => {
   const res = await fetch(API, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
+
+  if (!res.ok) return [];
   return res.json();
 };
 
