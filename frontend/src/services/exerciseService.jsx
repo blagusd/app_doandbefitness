@@ -18,6 +18,6 @@ export const createExercise = async (exerciseData) => {
     },
     body: JSON.stringify(exerciseData),
   });
-
+  console.log(res);
   return res.json();
 };

@@ -74,6 +74,7 @@ function AdminDashboard() {
         exercises.forEach((ex) => (map[ex._id] = ex));
       }
       setExerciseMap(map);
+
       console.log("usersData:", usersData);
       console.log("exercises:", exercises);
     };
@@ -97,44 +98,23 @@ function AdminDashboard() {
 
       const res = await fetchWeeklyPlanForWeek(selectedUser._id, weekNumber);
 
-      if (!res || !Array.isArray(res.days)) {
-        const numDays = selectedUser.planDays || 3;
-
-        const days = Array.from({ length: numDays }, (_, i) => ({
-          day: `Dan ${i + 1}`,
-          exercises: [],
-        }));
-
-        await saveWeeklyPlan({
-          userId: selectedUser._id,
-          weekNumber,
-          days,
-        });
-
-        setWeekDays(normalizeDays(days));
-
-        const updatedPlans = await fetchUserWeeklyPlans(selectedUser._id);
-        setUserPlans(Array.isArray(updatedPlans) ? updatedPlans : []);
-
+      if (res && Array.isArray(res.days)) {
+        setWeekDays(normalizeDays(res.days));
         return;
       }
 
-      setWeekDays(normalizeDays(res.days));
+      const numDays = selectedUser.planDays || 3;
+
+      const days = Array.from({ length: numDays }, (_, i) => ({
+        day: `Dan ${i + 1}`,
+        exercises: [],
+      }));
+
+      setWeekDays(normalizeDays(days));
     };
 
     loadWeek();
   }, [selectedUser, weekNumber, userPlans]);
-
-  useEffect(() => {
-    if (!selectedUser) {
-      setWeekDays([]);
-      setWeekNumber(1);
-      return;
-    }
-
-    setWeekDays([]);
-    setWeekNumber(1);
-  }, [selectedUser]);
 
   const fetchUserSteps = async (userId) => {
     if (!userId) return;
@@ -173,6 +153,7 @@ function AdminDashboard() {
 
     const steps = await fetchStepsAdmin(user._id);
     setStepsData(steps || []);
+
     console.log("plans:", plans);
     console.log("weight:", weight);
     console.log("photos:", photos);
@@ -181,7 +162,6 @@ function AdminDashboard() {
 
   const handleCreateExercise = async () => {
     const res = await createExercise(exerciseForm);
-
     const newExercise = res.exercise || res;
 
     setExerciseMap((prev) => ({
@@ -236,7 +216,7 @@ function AdminDashboard() {
     });
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
-    setUserPlans(plans);
+    setUserPlans(Array.isArray(plans) ? plans : []);
   };
 
   const savePlan = async () => {
@@ -251,7 +231,7 @@ function AdminDashboard() {
     await saveWeeklyPlan(payload);
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
-    setUserPlans(plans);
+    setUserPlans(Array.isArray(plans) ? plans : []);
 
     setWeekDays(normalizeDays(payload.days));
 
@@ -263,12 +243,12 @@ function AdminDashboard() {
 
     const res = await deleteWeeklyPlan(selectedUser._id, weekNumber);
 
-    if (res.success) {
+    if (res && res.success) {
       alert("Tjedni plan obrisan!");
       setWeekDays([]);
 
       const plans = await fetchUserWeeklyPlans(selectedUser._id);
-      setUserPlans(plans);
+      setUserPlans(Array.isArray(plans) ? plans : []);
     } else {
       alert("Plan nije pronađen.");
     }
@@ -277,7 +257,7 @@ function AdminDashboard() {
   const increasePlanDays = async () => {
     if (!selectedUser) return;
 
-    const newValue = selectedUser.planDays + 1;
+    const newValue = (selectedUser.planDays || 0) + 1;
 
     await updateUser(selectedUser._id, { planDays: newValue });
     setSelectedUser({ ...selectedUser, planDays: newValue });
@@ -296,11 +276,11 @@ function AdminDashboard() {
     });
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
-    setUserPlans(plans);
+    setUserPlans(Array.isArray(plans) ? plans : []);
   };
 
   const decreasePlanDays = async () => {
-    if (!selectedUser || selectedUser.planDays <= 1) return;
+    if (!selectedUser || (selectedUser.planDays || 1) <= 1) return;
 
     const newValue = selectedUser.planDays - 1;
 
@@ -317,7 +297,7 @@ function AdminDashboard() {
     });
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
-    setUserPlans(plans);
+    setUserPlans(Array.isArray(plans) ? plans : []);
   };
 
   const openFullscreen = (pos, index) => {
