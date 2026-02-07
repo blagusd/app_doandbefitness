@@ -1,13 +1,16 @@
 export const fetchPhotos = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/photos`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
+  const res = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/users/photos`,
+    {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    },
+  );
   return res.json();
 };
 
 export const fetchPhotosAdmin = async (userId) => {
   const res = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/users/photos/${userId}`,
+    `${import.meta.env.VITE_API_BASE_URL}/api/users/photos/${userId}`,
     {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     },
@@ -16,11 +19,14 @@ export const fetchPhotosAdmin = async (userId) => {
 };
 
 export const uploadPhoto = async (formData) => {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/photos`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    body: formData,
-  });
+  const res = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/users/photos`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: formData,
+    },
+  );
 
   return res.json();
 };
