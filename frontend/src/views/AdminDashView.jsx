@@ -180,7 +180,9 @@ function AdminDashboard() {
   };
 
   const handleCreateExercise = async () => {
-    const newExercise = await createExercise(exerciseForm);
+    const res = await createExercise(exerciseForm);
+
+    const newExercise = res.exercise || res;
 
     setExerciseMap((prev) => ({
       ...prev,
@@ -223,9 +225,18 @@ function AdminDashboard() {
     });
   };
 
-  const removeExerciseFromDay = (dayIndex, exIndex) => {
+  const removeExerciseFromDay = async (dayIndex, exIndex) => {
     const updated = removeExerciseFromDayUtil(weekDays, dayIndex, exIndex);
     setWeekDays(updated);
+
+    await saveWeeklyPlan({
+      userId: selectedUser._id,
+      weekNumber,
+      days: updated,
+    });
+
+    const plans = await fetchUserWeeklyPlans(selectedUser._id);
+    setUserPlans(plans);
   };
 
   const savePlan = async () => {
@@ -269,15 +280,20 @@ function AdminDashboard() {
     const newValue = selectedUser.planDays + 1;
 
     await updateUser(selectedUser._id, { planDays: newValue });
-
     setSelectedUser({ ...selectedUser, planDays: newValue });
 
-    setWeekDays((prev) =>
-      normalizeDays([
-        ...prev,
-        { day: `Dan ${prev.length + 1}`, exercises: [] },
-      ]),
-    );
+    const updated = normalizeDays([
+      ...weekDays,
+      { day: `Dan ${weekDays.length + 1}`, exercises: [] },
+    ]);
+
+    setWeekDays(updated);
+
+    await saveWeeklyPlan({
+      userId: selectedUser._id,
+      weekNumber,
+      days: updated,
+    });
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
     setUserPlans(plans);
@@ -289,33 +305,19 @@ function AdminDashboard() {
     const newValue = selectedUser.planDays - 1;
 
     await updateUser(selectedUser._id, { planDays: newValue });
-
     setSelectedUser({ ...selectedUser, planDays: newValue });
 
-    setWeekDays((prev) => normalizeDays(prev.slice(0, -1)));
+    const updated = normalizeDays(weekDays.slice(0, -1));
+    setWeekDays(updated);
+
+    await saveWeeklyPlan({
+      userId: selectedUser._id,
+      weekNumber,
+      days: updated,
+    });
 
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
     setUserPlans(plans);
-  };
-
-  const openFullscreen = (pos, index) => {
-    setFullscreenPhoto({ pos, index });
-  };
-
-  const closeFullscreen = () => {
-    setFullscreenPhoto(null);
-  };
-
-  const navigateFullscreen = (direction) => {
-    if (!fullscreenPhoto) return;
-    const photos = progressPhotos[fullscreenPhoto.pos] || [];
-    const newIndex =
-      direction === "left"
-        ? fullscreenPhoto.index - 1
-        : fullscreenPhoto.index + 1;
-    if (newIndex >= 0 && newIndex < photos.length) {
-      setFullscreenPhoto({ ...fullscreenPhoto, index: newIndex });
-    }
   };
 
   return (
