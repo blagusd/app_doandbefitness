@@ -12,9 +12,9 @@ const exerciseVideoRoutes = require("./routes/exerciseVideoRoutes");
 
 const errorHandler = require("./middleware/errorHandler");
 const securityMiddleware = require("./middleware/securityMiddleware");
-const { swaggerUi, specs } = require("./config/swagger");
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(
   cors({
@@ -45,9 +45,6 @@ app.use("/auth", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/weekly-plan", weeklyPlanRoutes);
 app.use("/exercise-videos", exerciseVideoRoutes);
-
-// Documentation
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use(errorHandler);
 
