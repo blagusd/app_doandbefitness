@@ -41,7 +41,7 @@ mongoose
 app.use("/auth", authRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/exercises", exerciseRoutes);
-app.use("/users", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/weekly-plan", weeklyPlanRoutes);
 app.use("/exercise-videos", exerciseVideoRoutes);

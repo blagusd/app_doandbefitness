@@ -5,7 +5,7 @@ const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 const multer = require("multer");
 const path = require("path");
 
-router.get("/users", authMiddleware, requireRole("admin"), async (req, res) => {
+router.get("/", authMiddleware, requireRole("admin"), async (req, res) => {
   try {
     const users = await User.find();
 
