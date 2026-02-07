@@ -96,15 +96,29 @@ function AdminDashboard() {
       }
 
       const res = await fetchWeeklyPlanForWeek(selectedUser._id, weekNumber);
+
       if (!res || !Array.isArray(res.days)) {
         const numDays = selectedUser.planDays || 3;
+
         const days = Array.from({ length: numDays }, (_, i) => ({
           day: `Dan ${i + 1}`,
           exercises: [],
         }));
+
+        await saveWeeklyPlan({
+          userId: selectedUser._id,
+          weekNumber,
+          days,
+        });
+
         setWeekDays(normalizeDays(days));
+
+        const updatedPlans = await fetchUserWeeklyPlans(selectedUser._id);
+        setUserPlans(Array.isArray(updatedPlans) ? updatedPlans : []);
+
         return;
       }
+
       setWeekDays(normalizeDays(res.days));
     };
 
