@@ -141,9 +141,9 @@ function Dashboard() {
     const formData = new FormData();
     formData.append(position, file);
 
-    const res = await uploadPhoto(formData);
-    if (res.ok) {
-      const data = await res.json();
+    const data = await uploadPhoto(formData);
+
+    if (data.success) {
       setProgressPhotos(data.progressPhotos);
     }
   };
