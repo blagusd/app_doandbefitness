@@ -320,6 +320,26 @@ function AdminDashboard() {
     setUserPlans(plans);
   };
 
+  const openFullscreen = (pos, index) => {
+    setFullscreenPhoto({ pos, index });
+  };
+
+  const closeFullscreen = () => {
+    setFullscreenPhoto(null);
+  };
+
+  const navigateFullscreen = (direction) => {
+    if (!fullscreenPhoto) return;
+    const photos = progressPhotos[fullscreenPhoto.pos] || [];
+    const newIndex =
+      direction === "left"
+        ? fullscreenPhoto.index - 1
+        : fullscreenPhoto.index + 1;
+    if (newIndex >= 0 && newIndex < photos.length) {
+      setFullscreenPhoto({ ...fullscreenPhoto, index: newIndex });
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       {" "}
