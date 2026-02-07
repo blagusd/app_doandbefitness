@@ -486,12 +486,94 @@ function AdminDashboard() {
                     )}{" "}
                     {/* ADD EXERCISE FORM */}{" "}
                     <div className="exercise-form">
-                      {" "}
+                      <input
+                        type="text"
+                        placeholder="Naziv vježbe"
+                        value={exerciseForm.name}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="YouTube link"
+                        value={exerciseForm.youtubeLink}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            youtubeLink: e.target.value,
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Mišićna skupina"
+                        value={exerciseForm.muscleGroup}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            muscleGroup: e.target.value,
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Bilješke"
+                        value={exerciseForm.notes}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            notes: e.target.value,
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="Serije"
+                        value={exerciseForm.sets}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            sets: e.target.value,
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="Ponavljanja"
+                        value={exerciseForm.reps}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            reps: e.target.value,
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="Kilaža"
+                        value={exerciseForm.weight}
+                        onChange={(e) =>
+                          setExerciseForm((prev) => ({
+                            ...prev,
+                            weight: e.target.value,
+                          }))
+                        }
+                      />
+
                       <button onClick={() => addExerciseToDay(idx)}>
-                        {" "}
-                        Dodaj vježbu{" "}
-                      </button>{" "}
-                    </div>{" "}
+                        Dodaj vježbu
+                      </button>
+                    </div>
                   </div>
                 ))}{" "}
               </div>{" "}
