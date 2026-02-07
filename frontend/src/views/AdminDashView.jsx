@@ -203,8 +203,14 @@ function AdminDashboard() {
 
     setWeekDays(updated);
 
+    await saveWeeklyPlan({
+      userId: selectedUser._id,
+      weekNumber,
+      days: updated,
+    });
+
     const plans = await fetchUserWeeklyPlans(selectedUser._id);
-    setUserPlans(plans);
+    setUserPlans(Array.isArray(plans) ? plans : []);
 
     setExerciseForm({
       name: "",
