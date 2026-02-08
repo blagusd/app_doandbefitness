@@ -34,7 +34,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/uploads", express.static("uploads"));
 app.use(express.json());
+
 securityMiddleware(app);
 
 mongoose
@@ -49,7 +51,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/weekly-plan", weeklyPlanRoutes);
 app.use("/exercise-videos", exerciseVideoRoutes);
-app.use("/uploads", express.static("uploads"));
 
 app.use(errorHandler);
 
