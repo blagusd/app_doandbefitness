@@ -13,13 +13,7 @@ const fs = require("fs");
 
 const upload = multer({ dest: "temp/" });
 
-router.post(
-  "/",
-  authMiddleware,
-  requireRole("client"),
-  validateProgressEntry,
-  addProgress,
-);
+router.post("/", authMiddleware, requireRole("client"), addProgress);
 
 router.get("/", authMiddleware, requireRole("client"), getProgress);
 
