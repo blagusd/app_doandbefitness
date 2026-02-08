@@ -20,9 +20,10 @@ export const fetchPhotosAdmin = async (userId) => {
 
 export const uploadPhoto = async (formData) => {
   const res = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/api/users/photos`,
+    `${import.meta.env.VITE_API_BASE_URL}/api/progress/upload-photo`,
     {
       method: "POST",
+      credentials: "include",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },

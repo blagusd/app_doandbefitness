@@ -1,4 +1,3 @@
-const StepsProgress = require("../models/Steps");
 const express = require("express");
 const { validateProgressEntry } = require("../middleware/validationMiddleware");
 const router = express.Router();
@@ -8,6 +7,10 @@ const {
 } = require("../controllers/progressController");
 const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 const User = require("../models/User");
+const multer = require("multer");
+const cloudinary = require("../config/cloudinary");
+const upload = multer({ dest: "temp/" });
+const fs = require("fs");
 
 router.post(
   "/",
@@ -98,6 +101,31 @@ router.get(
     } catch (err) {
       console.error("Error fetching user steps:", err);
       res.status(500).json({ message: "Server error" });
+    }
+  },
+);
+
+router.post(
+  "/upload-photo",
+  authMiddleware,
+  requireRole("client"),
+  upload.single("photo"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "progress_photos",
+      });
+
+      fs.unlinkSync(req.file.path);
+
+      res.json({ url: result.secure_url });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Upload failed" });
     }
   },
 );

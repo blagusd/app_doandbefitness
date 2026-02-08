@@ -139,13 +139,16 @@ function Dashboard() {
     reader.readAsDataURL(file);
 
     const formData = new FormData();
-    formData.append(position, file); // MUST BE: "front" | "side" | "back"
+    formData.append("photo", file);
 
     try {
       const data = await uploadPhoto(formData);
 
-      if (data?.success) {
-        setProgressPhotos(data.progressPhotos);
+      if (data?.url) {
+        setProgressPhotos((prev) => ({
+          ...prev,
+          [position]: data.url,
+        }));
       } else {
         console.error("Upload failed:", data);
       }
@@ -157,6 +160,7 @@ function Dashboard() {
   const openFullscreen = (pos, index) => {
     setFullscreenPhoto({ pos, index });
   };
+
   const closeFullscreen = () => {
     setFullscreenPhoto(null);
   };
