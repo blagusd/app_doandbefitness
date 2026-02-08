@@ -367,6 +367,7 @@
     width: 100%;
     flex: none;
     margin: 0;
+    padding: 0 10px;
   }
 
   .video-aside,

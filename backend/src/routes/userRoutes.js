@@ -84,7 +84,7 @@ router.post(
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/progress");
+    cb(null, path.join(__dirname, "../../uploads/progress"));
   },
   filename: (req, file, cb) => {
     const ext = file.originalname.split(".").pop();
