@@ -14,6 +14,7 @@ const errorHandler = require("./src/middleware/errorHandler");
 const securityMiddleware = require("./src/middleware/securityMiddleware");
 
 const app = express();
+const path = require("path");
 app.set("trust proxy", 1);
 
 app.use(
@@ -34,7 +35,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 
 securityMiddleware(app);
