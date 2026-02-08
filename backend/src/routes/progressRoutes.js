@@ -9,8 +9,9 @@ const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 const User = require("../models/User");
 const multer = require("multer");
 const cloudinary = require("../config/cloudinary");
-const upload = multer({ dest: "temp/" });
 const fs = require("fs");
+
+const upload = multer({ dest: "temp/" });
 
 router.post(
   "/",
@@ -32,13 +33,9 @@ router.post(
       const userId = req.user.id;
 
       const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-      if (!user.stepsHistory) {
-        user.stepsHistory = [];
-      }
+      if (!user.stepsHistory) user.stepsHistory = [];
 
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
@@ -54,8 +51,8 @@ router.post(
       } else {
         user.stepsHistory.push({ date: today, steps });
       }
-      user.markModified("stepsHistory");
 
+      user.markModified("stepsHistory");
       await user.save();
 
       res.json({ success: true, stepsHistory: user.stepsHistory });
@@ -72,11 +69,8 @@ router.get(
   requireRole("client"),
   async (req, res) => {
     try {
-      const userId = req.user.id;
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const user = await User.findById(req.user.id);
+      if (!user) return res.status(404).json({ message: "User not found" });
 
       res.json(user.stepsHistory || []);
     } catch (err) {
@@ -92,11 +86,9 @@ router.get(
   requireRole("admin"),
   async (req, res) => {
     try {
-      const { userId } = req.params;
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const user = await User.findById(req.params.userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
       res.json(user.stepsHistory || []);
     } catch (err) {
       console.error("Error fetching user steps:", err);

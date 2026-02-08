@@ -134,7 +134,10 @@ function Dashboard() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreviewPhotos((prev) => ({ ...prev, [position]: reader.result }));
+      setPreviewPhotos((prev) => ({
+        ...prev,
+        [position]: reader.result,
+      }));
     };
     reader.readAsDataURL(file);
 
@@ -142,12 +145,24 @@ function Dashboard() {
     formData.append("photo", file);
 
     try {
-      const data = await uploadPhoto(formData);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/progress/upload-photo`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        },
+      );
+
+      const data = await res.json();
 
       if (data?.url) {
         setProgressPhotos((prev) => ({
           ...prev,
-          [position]: data.url,
+          [position]: [...(prev[position] || []), data.url],
         }));
       } else {
         console.error("Upload failed:", data);

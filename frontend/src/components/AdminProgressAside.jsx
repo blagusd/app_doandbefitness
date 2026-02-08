@@ -32,11 +32,7 @@ function AdminProgressAside({
             const photos = progressPhotos[pos] || [];
             const currentIndex = photoIndex[pos];
             const currentPhoto = photos[currentIndex];
-            const currentPhotoUrl = currentPhoto
-              ? currentPhoto.startsWith("http")
-                ? currentPhoto
-                : `${import.meta.env.VITE_API_BASE_URL}${currentPhoto}`
-              : null;
+            const currentPhotoUrl = currentPhoto || null;
 
             return (
               <div key={pos} className="photo-block">
