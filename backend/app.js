@@ -11,7 +11,7 @@ const weeklyPlanRoutes = require("./src/routes/weeklyPlanRoutes");
 const exerciseVideoRoutes = require("./src/routes/exerciseVideoRoutes");
 
 const errorHandler = require("./src/middleware/errorHandler");
-const securityMiddleware = require("./middleware/securityMiddleware");
+const securityMiddleware = require("./src/middleware/securityMiddleware");
 
 const app = express();
 app.set("trust proxy", 1);
