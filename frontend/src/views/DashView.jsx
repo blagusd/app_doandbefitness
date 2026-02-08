@@ -67,10 +67,6 @@ function Dashboard() {
       const weight = await fetchWeightHistory();
       setWeightHistory(weight.weightHistory || []);
 
-      // 4) Fetch progress photos
-      const photos = await fetchPhotos();
-      setProgressPhotos(photos.progressPhotos || {});
-
       const exercises = await fetchExercises();
       const map = {};
       exercises.forEach((ex) => (map[ex._id] = ex));
@@ -78,6 +74,16 @@ function Dashboard() {
     };
 
     load();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId || !localStorage.getItem("token")) return;
+
+    fetchPhotos().then((data) => {
+      if (data?.progressPhotos) {
+        setProgressPhotos(data.progressPhotos);
+      }
+    });
   }, [userId]);
 
   useEffect(() => {
