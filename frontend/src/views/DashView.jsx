@@ -145,27 +145,29 @@ function Dashboard() {
     formData.append("photo", file);
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/progress/upload-photo`,
-        {
+      const data = await uploadPhoto(formData);
+
+      if (data?.url) {
+        const updatedPhotos = {
+          ...progressPhotos,
+          [position]: [...(progressPhotos[position] || []), data.url],
+        };
+
+        setProgressPhotos(updatedPhotos);
+
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/progress`, {
           method: "POST",
           credentials: "include",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: formData,
-        },
-      );
-
-      const data = await res.json();
-
-      if (data?.url) {
-        setProgressPhotos((prev) => ({
-          ...prev,
-          [position]: [...(prev[position] || []), data.url],
-        }));
-      } else {
-        console.error("Upload failed:", data);
+          body: JSON.stringify({
+            progressPhotos: {
+              [position]: [data.url],
+            },
+          }),
+        });
       }
     } catch (err) {
       console.error("Upload error:", err);
