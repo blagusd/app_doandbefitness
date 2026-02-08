@@ -3,29 +3,36 @@ const User = require("../models/User");
 
 exports.addProgress = async (req, res, next) => {
   try {
-    const userId = req.user.id; // from JWT
-    const { exerciseId, sets, reps, weight } = req.body;
+    const userId = req.user.id;
+    const { weight, progressPhotos } = req.body;
 
-    const progressEntry = {
-      exerciseId,
-      sets,
-      reps,
-      weight,
-      date: new Date(),
-    };
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $push: { progressEntries: progressEntry } },
-      { new: true }
-    ).populate("progressEntries.exerciseId");
-
+    const user = await User.findById(userId);
     if (!user) {
       return next(new AppError("User not found", 404));
     }
 
+    if (weight) {
+      user.weightHistory.push({ weight, date: new Date() });
+    }
+
+    if (progressPhotos) {
+      if (!user.progressPhotos) {
+        user.progressPhotos = { front: [], side: [], back: [] };
+      }
+
+      ["front", "side", "back"].forEach((pos) => {
+        if (progressPhotos[pos]) {
+          user.progressPhotos[pos].push(...progressPhotos[pos]);
+        }
+      });
+    }
+
+    await user.save();
+
     res.status(201).json({
-      message: "🎉 Progress successfully added",
-      progress: user.progressEntries,
+      message: "Progress saved",
+      progressPhotos: user.progressPhotos,
+      weightHistory: user.weightHistory,
     });
   } catch (err) {
     next(err);
@@ -36,7 +43,7 @@ exports.getProgress = async (req, res, next) => {
   try {
     const userId = req.user.id; // from JWT
     const user = await User.findById(userId).populate(
-      "progressEntries.exerciseId"
+      "progressEntries.exerciseId",
     );
 
     res.status(200).json(user.progressEntries);
