@@ -29,6 +29,10 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
 
 app.use(express.json());
 securityMiddleware(app);
@@ -45,6 +49,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/weekly-plan", weeklyPlanRoutes);
 app.use("/exercise-videos", exerciseVideoRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.use(errorHandler);
 
