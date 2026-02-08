@@ -45,3 +45,17 @@
 .login-btn:hover {
   background-color: var(--color-primary-dark);
 }
+
+@media (max-width: 768px) {
+  .nav-right .nav-link {
+    display: none;
+  }
+
+  .login-btn {
+    display: block;
+  }
+
+  .navbar {
+    justify-content: space-between;
+  }
+}

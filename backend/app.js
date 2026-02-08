@@ -2,15 +2,15 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-const authRoutes = require("./routes/authRoutes");
-const progressRoutes = require("./routes/progressRoutes");
-const exerciseRoutes = require("./routes/exerciseRoutes");
-const userRoutes = require("./routes/userRoutes");
-const feedbackRoutes = require("./routes/feedbackRoutes");
-const weeklyPlanRoutes = require("./routes/weeklyPlanRoutes");
-const exerciseVideoRoutes = require("./routes/exerciseVideoRoutes");
+const authRoutes = require("./src/routes/authRoutes");
+const progressRoutes = require("./src/routes/progressRoutes");
+const exerciseRoutes = require("./src/routes/exerciseRoutes");
+const userRoutes = require("./src/routes/userRoutes");
+const feedbackRoutes = require("./src/routes/feedbackRoutes");
+const weeklyPlanRoutes = require("./src/routes/weeklyPlanRoutes");
+const exerciseVideoRoutes = require("./src/routes/exerciseVideoRoutes");
 
-const errorHandler = require("./middleware/errorHandler");
+const errorHandler = require("./src/middleware/errorHandler");
 const securityMiddleware = require("./middleware/securityMiddleware");
 
 const app = express();

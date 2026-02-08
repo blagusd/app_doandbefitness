@@ -139,12 +139,18 @@ function Dashboard() {
     reader.readAsDataURL(file);
 
     const formData = new FormData();
-    formData.append(position, file);
+    formData.append(position, file); // MUST BE: "front" | "side" | "back"
 
-    const data = await uploadPhoto(formData);
+    try {
+      const data = await uploadPhoto(formData);
 
-    if (data.success) {
-      setProgressPhotos(data.progressPhotos);
+      if (data?.success) {
+        setProgressPhotos(data.progressPhotos);
+      } else {
+        console.error("Upload failed:", data);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
     }
   };
 

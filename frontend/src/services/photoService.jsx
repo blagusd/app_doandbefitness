@@ -23,7 +23,9 @@ export const uploadPhoto = async (formData) => {
     `${import.meta.env.VITE_API_BASE_URL}/api/users/photos`,
     {
       method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
       body: formData,
     },
   );

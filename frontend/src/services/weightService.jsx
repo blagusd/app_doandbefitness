@@ -1,13 +1,16 @@
 export const fetchWeightHistory = async () => {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/weight`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
+  const res = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/users/weight`,
+    {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    },
+  );
   return res.json();
 };
 
 export const fetchWeightHistoryAdmin = async (userId) => {
   const res = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/auth/weight/${userId}`,
+    `${import.meta.env.VITE_API_BASE_URL}/api/users/weight/${userId}`,
     {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     },
@@ -16,7 +19,7 @@ export const fetchWeightHistoryAdmin = async (userId) => {
 };
 
 export const saveWeight = async (weight) => {
-  return fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/weight`, {
+  return fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/weight`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

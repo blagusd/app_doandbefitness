@@ -442,6 +442,36 @@
   .aside-header:hover {
     background: #e0e0e0;
   }
+
+  .photo-upload {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .photo-preview {
+    flex-direction: column;
+    gap: 25px;
+  }
+  .photo-block {
+    width: 100%;
+  }
+  .photo-scroll {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .photo-scroll img {
+    width: 100%;
+    max-height: 200px;
+  }
+  .photo-scroll button {
+    width: 100%;
+    padding: 10px;
+  }
+  .photo-counter {
+    text-align: center;
+    width: 100%;
+    font-size: 14px;
+    opacity: 0.8;
+  }
 }
 
 /* ------------------------------
